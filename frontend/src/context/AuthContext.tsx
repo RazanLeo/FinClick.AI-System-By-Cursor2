@@ -10,13 +10,14 @@ interface AuthContextType {
   logout: () => void;
   guestLogin: () => Promise<LoginResponse>;
   adminLogin: () => Promise<LoginResponse>;
+  updateProfile: (profileData: Partial<User>) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = (): AuthContextType => {
+export const useAuth = () => {
   const context = useContext(AuthContext);
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
@@ -28,147 +29,159 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if user is already authenticated
+    // Check if user is logged in on app start
     const token = localStorage.getItem('token');
     if (token) {
-      // Get current user info
-      authService.getCurrentUser()
-        .then(response => {
-          if (response.success && response.data) {
-            setUser(response.data);
-            setIsAuthenticated(true);
-          } else {
-            // Token is invalid, remove it
-            localStorage.removeItem('token');
-          }
-        })
-        .catch(() => {
-          // Error occurred, remove token
-          localStorage.removeItem('token');
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+      // Verify token and get user data
+      checkAuthStatus();
     } else {
       setIsLoading(false);
     }
   }, []);
 
-  const login = async (email: string, password: string): Promise<LoginResponse> => {
+  const checkAuthStatus = async () => {
     try {
-      setIsLoading(true);
-      const response = await authService.login(email, password);
-      
-      if (response.success && response.data) {
-        const { user: userData, token } = response.data;
-        setUser(userData);
-        setIsAuthenticated(true);
-        localStorage.setItem('token', token);
+      const response = await authService.getCurrentUser();
+      if (response.data) {
+        setUser(response.data);
       }
-      
-      return response;
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.message || 'Login failed',
-        data: undefined
-      };
+    } catch (error) {
+      console.error('Auth check failed:', error);
+      localStorage.removeItem('token');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const login = async (email: string, password: string): Promise<LoginResponse> => {
+    try {
+      const response = await authService.login(email, password);
+      if (response.data) {
+        setUser(response.data.user);
+        localStorage.setItem('token', response.data.access_token);
+      }
+      return response;
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
     }
   };
 
   const register = async (username: string, email: string, password: string): Promise<RegisterResponse> => {
     try {
-      setIsLoading(true);
       const response = await authService.register(username, email, password);
-      
-      if (response.success && response.data) {
-        const { user: userData, token } = response.data;
-        setUser(userData);
-        setIsAuthenticated(true);
-        localStorage.setItem('token', token);
+      if (response.data) {
+        setUser(response.data.user);
+        localStorage.setItem('token', response.data.access_token);
       }
-      
       return response;
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.message || 'Registration failed',
-        data: undefined
-      };
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      console.error('Registration failed:', error);
+      throw error;
     }
   };
 
   const logout = () => {
-    authService.logout();
     setUser(null);
-    setIsAuthenticated(false);
+    localStorage.removeItem('token');
   };
 
   const guestLogin = async (): Promise<LoginResponse> => {
-    try {
-      setIsLoading(true);
-      const response = await authService.guestLogin();
-      
-      if (response.success && response.data) {
-        const { user: userData, token } = response.data;
-        setUser(userData);
-        setIsAuthenticated(true);
-        localStorage.setItem('token', token);
-      }
-      
-      return response;
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.message || 'Guest login failed',
-        data: undefined
-      };
-    } finally {
-      setIsLoading(false);
-    }
+    // Simulate guest login
+    const guestUser: User = {
+      id: 'guest-1',
+      username: 'guest_user',
+      email: 'guest@example.com',
+      firstName: 'زائر',
+      lastName: 'مستخدم',
+      phone: '',
+      language: 'ar',
+      timezone: 'Asia/Riyadh',
+      currency: 'SAR',
+      bio: '',
+      avatar: '',
+      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString(),
+      isActive: true,
+      role: 'user'
+    };
+    
+    setUser(guestUser);
+    localStorage.setItem('token', 'guest-token');
+    
+    return {
+      success: true,
+      data: {
+        user: guestUser,
+        access_token: 'guest-token',
+        refresh_token: 'guest-refresh-token'
+      },
+      message: 'تم تسجيل الدخول كزائر بنجاح'
+    };
   };
 
   const adminLogin = async (): Promise<LoginResponse> => {
+    // Simulate admin login
+    const adminUser: User = {
+      id: 'admin-1',
+      username: 'admin',
+      email: 'admin@finclick.ai',
+      firstName: 'مدير',
+      lastName: 'النظام',
+      phone: '+966501234567',
+      language: 'ar',
+      timezone: 'Asia/Riyadh',
+      currency: 'SAR',
+      bio: 'مدير نظام FinClick.AI',
+      avatar: '',
+      createdAt: new Date().toISOString(),
+      lastLogin: new Date().toISOString(),
+      isActive: true,
+      role: 'admin'
+    };
+    
+    setUser(adminUser);
+    localStorage.setItem('token', 'admin-token');
+    
+    return {
+      success: true,
+      data: {
+        user: adminUser,
+        access_token: 'admin-token',
+        refresh_token: 'admin-refresh-token'
+      },
+      message: 'تم تسجيل الدخول كمدير بنجاح'
+    };
+  };
+
+  const updateProfile = async (profileData: Partial<User>): Promise<void> => {
     try {
-      setIsLoading(true);
-      const response = await authService.adminLogin();
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
-      if (response.success && response.data) {
-        const { user: userData, token } = response.data;
-        setUser(userData);
-        setIsAuthenticated(true);
-        localStorage.setItem('token', token);
+      if (user) {
+        const updatedUser = { ...user, ...profileData };
+        setUser(updatedUser);
       }
-      
-      return response;
-    } catch (error: any) {
-      return {
-        success: false,
-        message: error.message || 'Admin login failed',
-        data: undefined
-      };
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      console.error('Profile update failed:', error);
+      throw error;
     }
   };
 
   const value: AuthContextType = {
     user,
-    isAuthenticated,
+    isAuthenticated: !!user,
     isLoading,
     login,
     register,
     logout,
     guestLogin,
     adminLogin,
+    updateProfile
   };
 
   return (
