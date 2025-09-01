@@ -1,0 +1,85 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("MONGODB_URI")
+}
+
+model User {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  email           String    @unique
+  name            String?
+  password        String
+  company         String?
+  role            String    @default("user")
+  subscription    String    @default("free")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  analyses        Analysis[]
+  companies       Company[]
+}
+
+model Company {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String    @db.ObjectId
+  user            User      @relation(fields: [userId], references: [id])
+  name            String
+  nameEn          String?
+  sector          String
+  activity        String
+  legalEntity     String
+  country         String    @default("SA")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  financialData   FinancialData[]
+  analyses        Analysis[]
+}
+
+model FinancialData {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  companyId       String    @db.ObjectId
+  company         Company   @relation(fields: [companyId], references: [id])
+  year            Int
+  balanceSheet    Json
+  incomeStatement Json
+  cashFlow        Json
+  notes           Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Analysis {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String    @db.ObjectId
+  user            User      @relation(fields: [userId], references: [id])
+  companyId       String    @db.ObjectId
+  company         Company   @relation(fields: [companyId], references: [id])
+  type            String    // comprehensive, specific
+  status          String    @default("processing") // processing, completed, failed
+  yearsAnalyzed   Int[]
+  comparisonLevel String    // local, gcc, arab, asia, africa, europe, northAmerica, southAmerica, australia, global
+  language        String    @default("ar")
+  results         Json?
+  executiveSummary Json?
+  reports         Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  completedAt     DateTime?
+}
+
+model IndustryBenchmark {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  sector          String
+  activity        String
+  region          String
+  metric          String
+  value           Float
+  year            Int
+  source          String
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  @@index([sector, activity, region, metric, year])
+}
