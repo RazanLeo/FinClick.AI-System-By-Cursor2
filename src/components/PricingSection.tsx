@@ -47,11 +47,9 @@ const PricingSection: React.FC<PricingSectionProps> = ({ language }) => {
         annual: 0
       },
       features: [
-        language === 'ar' ? '3 تحليلات مجانية' : '3 Free Analyses',
+        language === 'ar' ? '3 تحليلات أساسية شهرياً' : '3 Basic Analyses per Month',
         language === 'ar' ? 'الأدوات المجانية' : 'Free Tools',
-        language === 'ar' ? 'تقارير أساسية' : 'Basic Reports',
-        language === 'ar' ? 'دعم البريد الإلكتروني' : 'Email Support',
-        language === 'ar' ? 'وصول محدود للبيانات' : 'Limited Data Access'
+        language === 'ar' ? 'تقارير أساسية' : 'Basic Reports'
       ],
       limitations: [
         language === 'ar' ? 'لا يوجد تحليل متقدم' : 'No Advanced Analysis',
@@ -71,17 +69,14 @@ const PricingSection: React.FC<PricingSectionProps> = ({ language }) => {
         ? 'للأفراد والشركات الصغيرة'
         : 'For individuals and small businesses',
       price: {
-        monthly: 99,
-        annual: 990
+        monthly: 29,
+        annual: 290
       },
       features: [
         language === 'ar' ? '50 تحليل شهرياً' : '50 Analyses per Month',
-        language === 'ar' ? 'جميع الأدوات المجانية' : 'All Free Tools',
+        language === 'ar' ? 'جميع أنواع التحليل' : 'All Analysis Types',
         language === 'ar' ? 'تقارير مفصلة' : 'Detailed Reports',
-        language === 'ar' ? 'تصدير PDF و Excel' : 'PDF & Excel Export',
-        language === 'ar' ? 'دعم فني أساسي' : 'Basic Technical Support',
-        language === 'ar' ? 'تحليل أساسي' : 'Basic Analysis',
-        language === 'ar' ? 'مقارنة مع الصناعة' : 'Industry Comparison'
+        language === 'ar' ? 'دعم البريد الإلكتروني' : 'Email Support'
       ],
       limitations: [
         language === 'ar' ? 'لا يوجد تحليل متقدم' : 'No Advanced Analysis',
@@ -100,19 +95,15 @@ const PricingSection: React.FC<PricingSectionProps> = ({ language }) => {
         ? 'للشركات المتوسطة والمحللين الماليين'
         : 'For medium companies and financial analysts',
       price: {
-        monthly: 299,
-        annual: 2990
+        monthly: 79,
+        annual: 790
       },
       features: [
         language === 'ar' ? 'تحليلات غير محدودة' : 'Unlimited Analyses',
-        language === 'ar' ? 'جميع أنواع التحليل' : 'All Analysis Types',
-        language === 'ar' ? 'تحليل متقدم' : 'Advanced Analysis',
-        language === 'ar' ? 'محاكاة إحصائية' : 'Statistical Simulations',
+        language === 'ar' ? 'تحليل متقدم ومتخصص' : 'Advanced & Specialized Analysis',
         language === 'ar' ? 'تقارير مخصصة' : 'Custom Reports',
-        language === 'ar' ? 'تصدير جميع الصيغ' : 'All Export Formats',
-        language === 'ar' ? 'دعم فني متقدم' : 'Advanced Technical Support',
-        language === 'ar' ? 'API الوصول' : 'API Access',
-        language === 'ar' ? 'تدريب مجاني' : 'Free Training'
+        language === 'ar' ? 'دعم فني مخصص' : 'Dedicated Technical Support',
+        language === 'ar' ? 'API access' : 'API Access'
       ],
       limitations: [],
       icon: Crown,
@@ -128,20 +119,15 @@ const PricingSection: React.FC<PricingSectionProps> = ({ language }) => {
         ? 'للشركات الكبيرة والمؤسسات المالية'
         : 'For large companies and financial institutions',
       price: {
-        monthly: 999,
-        annual: 9990
+        monthly: 199,
+        annual: 1990
       },
       features: [
-        language === 'ar' ? 'جميع الميزات' : 'All Features',
-        language === 'ar' ? 'تحليل متخصص' : 'Specialized Analysis',
-        language === 'ar' ? 'محاكاة مونت كارلو' : 'Monte Carlo Simulation',
-        language === 'ar' ? 'تحليل المخاطر المتقدم' : 'Advanced Risk Analysis',
-        language === 'ar' ? 'تقارير مخصصة كاملة' : 'Full Custom Reports',
-        language === 'ar' ? 'دعم فني مخصص' : 'Dedicated Technical Support',
-        language === 'ar' ? 'مدير حساب مخصص' : 'Dedicated Account Manager',
-        language === 'ar' ? 'تدريب شامل' : 'Comprehensive Training',
+        language === 'ar' ? 'كل مميزات المحترف' : 'All Professional Features',
+        language === 'ar' ? 'دعم متعدد المستخدمين' : 'Multi-User Support',
         language === 'ar' ? 'تكامل مخصص' : 'Custom Integration',
-        language === 'ar' ? 'أمان متقدم' : 'Advanced Security'
+        language === 'ar' ? 'دعم مخصص 24/7' : '24/7 Dedicated Support',
+        language === 'ar' ? 'تدريب الفريق' : 'Team Training'
       ],
       limitations: [],
       icon: Shield,
