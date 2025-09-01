@@ -38,23 +38,23 @@ const PricingSection: React.FC<PricingSectionProps> = ({ language }) => {
   const plans = [
     {
       id: 'guest',
-      name: language === 'ar' ? 'زائر' : 'Guest',
+      name: language === 'ar' ? 'ضيف' : 'Guest',
       description: language === 'ar' 
-        ? 'للتعرف على النظام والميزات الأساسية'
-        : 'To explore the system and basic features',
+        ? 'جميع مزايا المشتركين لكن بدون حفظ البيانات'
+        : 'All subscriber features but without data saving',
       price: {
         monthly: 0,
         annual: 0
       },
       features: [
-        language === 'ar' ? '3 تحليلات أساسية شهرياً' : '3 Basic Analyses per Month',
+        language === 'ar' ? 'جميع مزايا المشتركين' : 'All Subscriber Features',
         language === 'ar' ? 'الأدوات المجانية' : 'Free Tools',
-        language === 'ar' ? 'تقارير أساسية' : 'Basic Reports'
+        language === 'ar' ? 'تقارير أساسية' : 'Basic Reports',
+        language === 'ar' ? 'دعم البريد الإلكتروني' : 'Email Support',
+        language === 'ar' ? 'وصول محدود للبيانات' : 'Limited Data Access'
       ],
       limitations: [
-        language === 'ar' ? 'لا يوجد تحليل متقدم' : 'No Advanced Analysis',
-        language === 'ar' ? 'لا يوجد تصدير' : 'No Export',
-        language === 'ar' ? 'لا يوجد دعم فني' : 'No Technical Support'
+        language === 'ar' ? 'لا يوجد حفظ للبيانات' : 'No Data Saving'
       ],
       icon: Users,
       color: 'text-finclick-gold',
@@ -64,76 +64,29 @@ const PricingSection: React.FC<PricingSectionProps> = ({ language }) => {
     },
     {
       id: 'basic',
-      name: language === 'ar' ? 'أساسي' : 'Basic',
+      name: language === 'ar' ? 'مشترك' : 'Subscriber',
       description: language === 'ar' 
-        ? 'للأفراد والشركات الصغيرة'
-        : 'For individuals and small businesses',
+        ? 'خطة الاشتراك الوحيدة - جميع الميزات'
+        : 'The only subscription plan - all features',
       price: {
-        monthly: 29,
-        annual: 290
+        monthly: 5000,
+        annual: 54000
       },
       features: [
-        language === 'ar' ? '50 تحليل شهرياً' : '50 Analyses per Month',
-        language === 'ar' ? 'جميع أنواع التحليل' : 'All Analysis Types',
-        language === 'ar' ? 'تقارير مفصلة' : 'Detailed Reports',
-        language === 'ar' ? 'دعم البريد الإلكتروني' : 'Email Support'
-      ],
-      limitations: [
-        language === 'ar' ? 'لا يوجد تحليل متقدم' : 'No Advanced Analysis',
-        language === 'ar' ? 'لا يوجد محاكاة' : 'No Simulations'
-      ],
-      icon: BarChart3,
-      color: 'text-finclick-success',
-      popular: false,
-      buttonText: language === 'ar' ? 'اختر الأساسي' : 'Choose Basic',
-      buttonVariant: 'primary' as const
-    },
-    {
-      id: 'professional',
-      name: language === 'ar' ? 'احترافي' : 'Professional',
-      description: language === 'ar' 
-        ? 'للشركات المتوسطة والمحللين الماليين'
-        : 'For medium companies and financial analysts',
-      price: {
-        monthly: 79,
-        annual: 790
-      },
-      features: [
-        language === 'ar' ? 'تحليلات غير محدودة' : 'Unlimited Analyses',
-        language === 'ar' ? 'تحليل متقدم ومتخصص' : 'Advanced & Specialized Analysis',
-        language === 'ar' ? 'تقارير مخصصة' : 'Custom Reports',
-        language === 'ar' ? 'دعم فني مخصص' : 'Dedicated Technical Support',
-        language === 'ar' ? 'API access' : 'API Access'
+        language === 'ar' ? '181+ نوع تحليل مالي' : '181+ Financial Analysis Types',
+        language === 'ar' ? 'جميع الأدوات المجانية' : 'All Free Tools',
+        language === 'ar' ? 'تقارير احترافية مفصلة' : 'Professional Detailed Reports',
+        language === 'ar' ? 'تصدير جميع الصيغ' : 'All Export Formats',
+        language === 'ar' ? 'دعم فني متقدم' : 'Advanced Technical Support',
+        language === 'ar' ? 'API الوصول' : 'API Access',
+        language === 'ar' ? 'محاكاة إحصائية متقدمة' : 'Advanced Statistical Simulations',
+        language === 'ar' ? 'تحليل ذكي بالذكاء الاصطناعي' : 'AI-Powered Smart Analysis'
       ],
       limitations: [],
       icon: Crown,
-      color: 'text-finclick-warning',
+      color: 'text-finclick-success',
       popular: true,
-      buttonText: language === 'ar' ? 'اختر الاحترافي' : 'Choose Professional',
-      buttonVariant: 'primary' as const
-    },
-    {
-      id: 'enterprise',
-      name: language === 'ar' ? 'مؤسسات' : 'Enterprise',
-      description: language === 'ar' 
-        ? 'للشركات الكبيرة والمؤسسات المالية'
-        : 'For large companies and financial institutions',
-      price: {
-        monthly: 199,
-        annual: 1990
-      },
-      features: [
-        language === 'ar' ? 'كل مميزات المحترف' : 'All Professional Features',
-        language === 'ar' ? 'دعم متعدد المستخدمين' : 'Multi-User Support',
-        language === 'ar' ? 'تكامل مخصص' : 'Custom Integration',
-        language === 'ar' ? 'دعم مخصص 24/7' : '24/7 Dedicated Support',
-        language === 'ar' ? 'تدريب الفريق' : 'Team Training'
-      ],
-      limitations: [],
-      icon: Shield,
-      color: 'text-finclick-error',
-      popular: false,
-      buttonText: language === 'ar' ? 'اتصل بنا' : 'Contact Us',
+      buttonText: language === 'ar' ? 'اشترك الآن' : 'Subscribe Now',
       buttonVariant: 'primary' as const
     }
   ];
@@ -153,9 +106,9 @@ const PricingSection: React.FC<PricingSectionProps> = ({ language }) => {
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('ar-SA', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'SAR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
     }).format(price);
@@ -218,7 +171,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({ language }) => {
         </motion.div>
 
         {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12 max-w-4xl mx-auto">
           {plans.map((plan, index) => (
             <motion.div
               key={plan.id}
@@ -262,13 +215,13 @@ const PricingSection: React.FC<PricingSectionProps> = ({ language }) => {
                       </span>
                       {plan.price[billingCycle] > 0 && (
                         <span className="text-sm text-finclick-gold/70 font-playfair">
-                          /{language === 'ar' ? 'شهر' : 'month'}
+                          /{billingCycle === 'monthly' ? (language === 'ar' ? 'شهر' : 'month') : (language === 'ar' ? 'سنة' : 'year')}
                         </span>
                       )}
                     </div>
                     {billingCycle === 'annual' && plan.price.monthly > 0 && (
                       <p className="text-sm text-finclick-success font-playfair">
-                        {language === 'ar' ? 'توفير' : 'Save'} {formatPrice(getAnnualDiscount(plan.price.monthly))}
+                        {language === 'ar' ? 'خصم 10% - توفير 6000 ريال سعودي' : '10% Discount - Save 6000 SAR'}
                       </p>
                     )}
                   </div>
