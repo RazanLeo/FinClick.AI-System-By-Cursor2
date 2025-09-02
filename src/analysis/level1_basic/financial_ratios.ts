@@ -1,5 +1,5 @@
 // src/analysis/level1_basic/financial_ratios.ts
-import { FinancialData, RatioAnalysisResult } from '../../types/financial';
+import { FinancialData, RatioAnalysisResult } from '@/types';
 
 /**
  * النسب المالية الأساسية
@@ -279,7 +279,7 @@ export class FinancialRatios {
 
   // 15. العائد على حقوق الملكية (Return on Equity - ROE)
   returnOnEquity(): RatioAnalysisResult {
-    const ratio = (this.data.incomeStatement.netIncome / this.data.balanceSheet.totalEquity) * 100;
+    const ratio = (this.data.incomeStatement.netIncome / this.data.balanceSheet.totalShareholdersEquity) * 100;
     
     return {
       name: 'العائد على حقوق الملكية',
@@ -296,7 +296,7 @@ export class FinancialRatios {
 
   // 16. العائد على رأس المال المستثمر (Return on Invested Capital - ROIC)
   returnOnInvestedCapital(): RatioAnalysisResult {
-    const investedCapital = this.data.balanceSheet.totalEquity + 
+    const investedCapital = this.data.balanceSheet.totalShareholdersEquity + 
                            this.data.balanceSheet.longTermDebt;
     const nopat = this.data.incomeStatement.operatingIncome * (1 - this.data.taxRate);
     const ratio = (nopat / investedCapital) * 100;
@@ -326,7 +326,7 @@ export class FinancialRatios {
       formula: 'صافي الربح ÷ عدد الأسهم القائمة',
       interpretation: this.interpretEPS(ratio),
       industryBenchmark: null,
-      evaluation: 'يعتمد على سعر السهم والصناعة',
+      evaluation: 'good',
       recommendations: this.getRecommendationsEPS(ratio)
     };
   }
@@ -338,7 +338,7 @@ export class FinancialRatios {
   // 18. نسبة الدين إلى حقوق الملكية (Debt to Equity Ratio)
   debtToEquityRatio(): RatioAnalysisResult {
     const totalDebt = this.data.balanceSheet.shortTermDebt + this.data.balanceSheet.longTermDebt;
-    const ratio = totalDebt / this.data.balanceSheet.totalEquity;
+    const ratio = totalDebt / this.data.balanceSheet.totalShareholdersEquity;
     
     return {
       name: 'نسبة الدين إلى حقوق الملكية',
@@ -392,7 +392,6 @@ export class FinancialRatios {
                    this.data.incomeStatement.amortization;
     const debtService = this.data.incomeStatement.interestExpense + 
                         this.data.cashFlowStatement.debtRepayment;
-    const ratio = ebit
     const ratio = ebitda / debtService;
    
    return {
@@ -409,7 +408,7 @@ export class FinancialRatios {
 
  // 22. مضاعف حقوق الملكية (Equity Multiplier)
  equityMultiplier(): RatioAnalysisResult {
-   const ratio = this.data.balanceSheet.totalAssets / this.data.balanceSheet.totalEquity;
+   const ratio = this.data.balanceSheet.totalAssets / this.data.balanceSheet.totalShareholdersEquity;
    
    return {
      name: 'مضاعف حقوق الملكية',
@@ -430,7 +429,7 @@ export class FinancialRatios {
  // 23. نسبة السعر إلى الربحية (Price to Earnings - P/E)
  priceToEarningsRatio(): RatioAnalysisResult {
    const eps = this.data.incomeStatement.netIncome / this.data.sharesOutstanding;
-   const ratio = this.data.marketPrice / eps;
+   const ratio = this.data.marketData.sharePrice / eps;
    
    return {
      name: 'نسبة السعر إلى الربحية',
@@ -446,8 +445,8 @@ export class FinancialRatios {
 
  // 24. نسبة السعر إلى القيمة الدفترية (Price to Book - P/B)
  priceToBookRatio(): RatioAnalysisResult {
-   const bookValuePerShare = this.data.balanceSheet.totalEquity / this.data.sharesOutstanding;
-   const ratio = this.data.marketPrice / bookValuePerShare;
+   const bookValuePerShare = this.data.balanceSheet.totalShareholdersEquity / this.data.sharesOutstanding;
+   const ratio = this.data.marketData.sharePrice / bookValuePerShare;
    
    return {
      name: 'نسبة السعر إلى القيمة الدفترية',
@@ -464,7 +463,7 @@ export class FinancialRatios {
  // 25. نسبة السعر إلى المبيعات (Price to Sales - P/S)
  priceToSalesRatio(): RatioAnalysisResult {
    const salesPerShare = this.data.incomeStatement.revenue / this.data.sharesOutstanding;
-   const ratio = this.data.marketPrice / salesPerShare;
+   const ratio = this.data.marketData.sharePrice / salesPerShare;
    
    return {
      name: 'نسبة السعر إلى المبيعات',
@@ -481,7 +480,7 @@ export class FinancialRatios {
  // 26. عائد الأرباح الموزعة (Dividend Yield)
  dividendYield(): RatioAnalysisResult {
    const dividendPerShare = this.data.cashFlowStatement.dividendsPaid / this.data.sharesOutstanding;
-   const ratio = (dividendPerShare / this.data.marketPrice) * 100;
+   const ratio = (dividendPerShare / this.data.marketData.sharePrice) * 100;
    
    return {
      name: 'عائد الأرباح الموزعة',
@@ -515,7 +514,7 @@ export class FinancialRatios {
 
  // 28. نسبة PEG (Price/Earnings to Growth)
  pegRatio(): RatioAnalysisResult {
-   const peRatio = this.data.marketPrice / (this.data.incomeStatement.netIncome / this.data.sharesOutstanding);
+   const peRatio = this.data.marketData.sharePrice / (this.data.incomeStatement.netIncome / this.data.sharesOutstanding);
    const growthRate = this.calculateEarningsGrowthRate();
    const ratio = peRatio / growthRate;
    
@@ -537,7 +536,7 @@ export class FinancialRatios {
 
  // 29. القيمة الدفترية للسهم (Book Value Per Share)
  bookValuePerShare(): RatioAnalysisResult {
-   const ratio = this.data.balanceSheet.totalEquity / this.data.sharesOutstanding;
+   const ratio = this.data.balanceSheet.totalShareholdersEquity / this.data.sharesOutstanding;
    
    return {
      name: 'القيمة الدفترية للسهم',
@@ -547,7 +546,7 @@ export class FinancialRatios {
      formula: 'حقوق الملكية ÷ عدد الأسهم القائمة',
      interpretation: this.interpretBookValue(ratio),
      industryBenchmark: null,
-     evaluation: 'قارن مع سعر السوق',
+           evaluation: 'good',
      recommendations: this.getRecommendationsBookValue(ratio)
    };
  }
@@ -556,7 +555,7 @@ export class FinancialRatios {
  freeCashFlowToEquity(): RatioAnalysisResult {
    const fcf = this.data.cashFlowStatement.operatingCashFlow - 
                this.data.cashFlowStatement.capitalExpenditures;
-   const ratio = fcf / this.data.balanceSheet.totalEquity;
+   const ratio = fcf / this.data.balanceSheet.totalShareholdersEquity;
    
    return {
      name: 'نسبة التدفق النقدي الحر إلى حقوق الملكية',
@@ -619,23 +618,23 @@ export class FinancialRatios {
  }
 
  // Helper Methods
- private evaluateRatio(value: number, benchmark: number, direction: 'higher' | 'lower' | 'balanced'): string {
+ private evaluateRatio(value: number, benchmark: number, direction: 'higher' | 'lower' | 'balanced'): 'excellent' | 'veryGood' | 'good' | 'acceptable' | 'weak' {
    if (direction === 'higher') {
-     if (value > benchmark * 1.2) return 'ممتاز';
-     if (value > benchmark) return 'جيد';
-     if (value > benchmark * 0.8) return 'مقبول';
-     return 'ضعيف';
+     if (value > benchmark * 1.2) return 'excellent';
+     if (value > benchmark) return 'good';
+     if (value > benchmark * 0.8) return 'acceptable';
+     return 'weak';
    } else if (direction === 'lower') {
-     if (value < benchmark * 0.8) return 'ممتاز';
-     if (value < benchmark) return 'جيد';
-     if (value < benchmark * 1.2) return 'مقبول';
-     return 'ضعيف';
+     if (value < benchmark * 0.8) return 'excellent';
+     if (value < benchmark) return 'good';
+     if (value < benchmark * 1.2) return 'acceptable';
+     return 'weak';
    } else {
      const deviation = Math.abs(value - benchmark) / benchmark;
-     if (deviation < 0.1) return 'ممتاز';
-     if (deviation < 0.2) return 'جيد';
-     if (deviation < 0.3) return 'مقبول';
-     return 'يحتاج مراجعة';
+     if (deviation < 0.1) return 'excellent';
+     if (deviation < 0.2) return 'good';
+     if (deviation < 0.3) return 'acceptable';
+     return 'weak';
    }
  }
 
@@ -1028,16 +1027,16 @@ export class FinancialRatios {
    return recommendations;
  }
 
- private interpretDividendYield(yield: number): string {
-   if (yield > 5) return 'عائد توزيعات مرتفع';
-   if (yield > 3) return 'عائد توزيعات جيد';
-   if (yield > 1) return 'عائد توزيعات معتدل';
+ private interpretDividendYield(dividendYield: number): string {
+   if (dividendYield > 5) return 'عائد توزيعات مرتفع';
+   if (dividendYield > 3) return 'عائد توزيعات جيد';
+   if (dividendYield > 1) return 'عائد توزيعات معتدل';
    return 'عائد توزيعات منخفض';
  }
 
- private getRecommendationsDividendYield(yield: number): string[] {
+ private getRecommendationsDividendYield(dividendYield: number): string[] {
    const recommendations = [];
-   if (yield > 7) {
+   if (dividendYield > 7) {
      recommendations.push('التحقق من استدامة التوزيعات');
    }
    return recommendations;

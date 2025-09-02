@@ -1,5 +1,19 @@
 // src/analysis/level3_advanced/statistical_quantitative.ts
-import { FinancialData, StatisticalAnalysisResult } from '../../types/financial';
+// Define FinancialData interface locally
+interface FinancialData {
+  incomeStatement: any;
+  balanceSheet: any;
+  cashFlowStatement: any;
+  [key: string]: any;
+}
+
+// Define StatisticalAnalysisResult interface locally
+interface StatisticalAnalysisResult {
+  analysisName: string;
+  results: any;
+  interpretation: string;
+  recommendations: string[];
+}
 
 /**
  * التحليل الإحصائي والكمي

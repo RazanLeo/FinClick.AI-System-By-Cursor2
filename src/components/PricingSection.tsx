@@ -34,6 +34,112 @@ interface PricingSectionProps {
 const PricingSection: React.FC<PricingSectionProps> = ({ language }) => {
   const [billingCycle, setBillingCycle] = useState<'monthly' | 'annual'>('monthly');
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'paypal' | 'apple' | 'google'>('card');
+
+  // دالة معالجة الاشتراك
+  const handleSubscription = async (planId: string) => {
+    setIsProcessing(true);
+    setSelectedPlan(planId);
+
+    try {
+      // محاكاة عملية الدفع
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // هنا يمكن إضافة تكامل مع Stripe أو PayPal
+      const success = await processPayment(planId, paymentMethod);
+      
+      if (success) {
+        alert(language === 'ar' ? 'تم الاشتراك بنجاح!' : 'Subscription successful!');
+        // إعادة توجيه إلى لوحة التحكم
+        window.location.href = '/dashboard';
+      } else {
+        alert(language === 'ar' ? 'فشل في المعالجة' : 'Payment failed');
+      }
+    } catch (error) {
+      console.error('خطأ في المعالجة:', error);
+      alert(language === 'ar' ? 'حدث خطأ في المعالجة' : 'Payment error occurred');
+    } finally {
+      setIsProcessing(false);
+      setSelectedPlan(null);
+    }
+  };
+
+  // دالة معالجة الدفع
+  const processPayment = async (planId: string, method: string): Promise<boolean> => {
+    // محاكاة عملية الدفع
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        // محاكاة نجاح الدفع
+        resolve(true);
+      }, 1000);
+    });
+  };
+
+  // دالة اختيار طريقة الدفع
+  const selectPaymentMethod = (method: 'card' | 'paypal' | 'apple' | 'google') => {
+    setPaymentMethod(method);
+  };
+
+  // واجهة طرق الدفع
+  const PaymentMethods = () => (
+    <div className="mt-6 p-6 bg-white/80 backdrop-blur-sm border border-finclick-gold/20 rounded-xl">
+      <h4 className="text-lg font-semibold text-finclick-gold mb-4 font-playfair">
+        {language === 'ar' ? 'طرق الدفع' : 'Payment Methods'}
+      </h4>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <button
+          onClick={() => selectPaymentMethod('card')}
+          className={`p-4 rounded-lg border-2 transition-all duration-300 ${
+            paymentMethod === 'card'
+              ? 'border-finclick-gold bg-finclick-gold/10 text-finclick-gold'
+              : 'border-gray-300 hover:border-finclick-gold/50'
+          }`}
+        >
+          <CreditCard className="w-8 h-8 mx-auto mb-2" />
+          <span className="text-sm font-medium">
+            {language === 'ar' ? 'بطاقة ائتمان' : 'Credit Card'}
+          </span>
+        </button>
+        
+        <button
+          onClick={() => selectPaymentMethod('paypal')}
+          className={`p-4 rounded-lg border-2 transition-all duration-300 ${
+            paymentMethod === 'paypal'
+              ? 'border-finclick-gold bg-finclick-gold/10 text-finclick-gold'
+              : 'border-gray-300 hover:border-finclick-gold/50'
+          }`}
+        >
+          <Wallet className="w-8 h-8 mx-auto mb-2" />
+          <span className="text-sm font-medium">PayPal</span>
+        </button>
+        
+        <button
+          onClick={() => selectPaymentMethod('apple')}
+          className={`p-4 rounded-lg border-2 transition-all duration-300 ${
+            paymentMethod === 'apple'
+              ? 'border-finclick-gold bg-finclick-gold/10 text-finclick-gold'
+              : 'border-gray-300 hover:border-finclick-gold/50'
+          }`}
+        >
+          <Apple className="w-8 h-8 mx-auto mb-2" />
+          <span className="text-sm font-medium">Apple Pay</span>
+        </button>
+        
+        <button
+          onClick={() => selectPaymentMethod('google')}
+          className={`p-4 rounded-lg border-2 transition-all duration-300 ${
+            paymentMethod === 'google'
+              ? 'border-finclick-gold bg-finclick-gold/10 text-finclick-gold'
+              : 'border-gray-300 hover:border-finclick-gold/50'
+          }`}
+        >
+          <Globe className="w-8 h-8 mx-auto mb-2" />
+          <span className="text-sm font-medium">Google Pay</span>
+        </button>
+      </div>
+    </div>
+  );
 
   const plans = [
     {
@@ -373,6 +479,9 @@ const PricingSection: React.FC<PricingSectionProps> = ({ language }) => {
           </motion.button>
         </motion.div>
       </div>
+
+      {/* واجهة طرق الدفع */}
+      <PaymentMethods />
     </section>
   );
 };

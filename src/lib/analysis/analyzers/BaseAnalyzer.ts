@@ -1,305 +1,356 @@
 import { AnalysisResult, FinancialStatement, Company } from '@/lib/types';
 
 export abstract class BaseAnalyzer {
+  /**
+   * Main analysis method that each analyzer must implement
+   */
   abstract analyze(
-    financialData: FinancialStatement[],
-    companyData: Company,
-    marketData?: any,
+    financialData: FinancialStatement[], 
+    companyData: Company, 
+    marketData?: any, 
     benchmarkData?: any
   ): Promise<AnalysisResult[]>;
 
+  /**
+   * Create a standardized error result
+   */
   protected createErrorResult(id: string, name: string): AnalysisResult {
     return {
       id,
       name,
       category: 'error',
+      type: 'error',
       currentValue: 0,
       rating: 'poor',
-      interpretation: 'فشل في حساب هذا المؤشر بسبب نقص في البيانات المطلوبة',
-      status: 'error',
-      recommendations: ['التأكد من اكتمال البيانات المالية المطلوبة للحساب']
+      interpretation: 'خطأ في حساب التحليل',
+      calculation: { 
+        formula: 'غير متاح', 
+        variables: {} 
+      },
+      insights: ['خطأ في حساب التحليل'],
+      recommendations: ['مراجعة البيانات المدخلة'],
+      status: 'error'
     };
   }
 
-  protected calculateTrend(values: number[], direction: 'up_is_better' | 'down_is_better' | 'contextual' = 'up_is_better'): 'up' | 'down' | 'stable' {
-    if (values.length < 2) return 'stable';
-    
-    const latest = values[values.length - 1];
-    const previous = values[values.length - 2];
-    const change = (latest - previous) / Math.abs(previous);
-    
-    if (Math.abs(change) < 0.05) return 'stable';
-    return change > 0 ? 'up' : 'down';
-  }
-
+  /**
+   * Format currency values
+   */
   protected formatCurrency(value: number): string {
-    if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)} مليون`;
-    } else if (value >= 1000) {
-      return `${(value / 1000).toFixed(0)} ألف`;
-    }
-    return value.toLocaleString('ar-SA');
+    return new Intl.NumberFormat('ar-SA', {
+      style: 'currency',
+      currency: 'SAR',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
   }
 
+  /**
+   * Format percentage values
+   */
   protected formatPercentage(value: number): string {
-    return `${(value * 100).toFixed(1)}%`;
+    return `${value.toFixed(2)}%`;
   }
 
+  /**
+   * Format ratio values
+   */
   protected formatRatio(value: number): string {
-    return `${value.toFixed(2)}:1`;
+    return value.toFixed(2);
   }
 
-  protected getRating(value: number, thresholds: {excellent: number, good: number, average: number}): 'excellent' | 'good' | 'average' | 'poor' {
-    if (value >= thresholds.excellent) return 'excellent';
-    if (value >= thresholds.good) return 'good';
-    if (value >= thresholds.average) return 'average';
-    return 'poor';
+  /**
+   * Calculate percentage change between two values
+   */
+  protected calculatePercentageChange(oldValue: number, newValue: number): number {
+    if (oldValue === 0) return newValue > 0 ? 100 : 0;
+    return ((newValue - oldValue) / Math.abs(oldValue)) * 100;
   }
 
-  protected getRatingReverse(value: number, thresholds: {excellent: number, good: number, average: number}): 'excellent' | 'good' | 'average' | 'poor' {
-    if (value <= thresholds.excellent) return 'excellent';
-    if (value <= thresholds.good) return 'good';
-    if (value <= thresholds.average) return 'average';
-    return 'poor';
+  /**
+   * Calculate CAGR (Compound Annual Growth Rate)
+   */
+  protected calculateCAGR(beginningValue: number, endingValue: number, years: number): number {
+    if (beginningValue === 0 || years === 0) return 0;
+    return Math.pow(endingValue / beginningValue, 1 / years) - 1;
   }
 
-  protected calculateGrowthRate(currentValue: number, previousValue: number): number {
-    if (previousValue === 0) return 0;
-    return (currentValue - previousValue) / Math.abs(previousValue);
+  /**
+   * Calculate average of an array of numbers
+   */
+  protected calculateAverage(values: number[]): number {
+    if (values.length === 0) return 0;
+    return values.reduce((sum, value) => sum + value, 0) / values.length;
   }
 
-  protected calculateCAGR(initialValue: number, finalValue: number, periods: number): number {
-    if (initialValue <= 0 || finalValue <= 0 || periods <= 0) return 0;
-    return Math.pow(finalValue / initialValue, 1 / periods) - 1;
+  /**
+   * Calculate median of an array of numbers
+   */
+  protected calculateMedian(values: number[]): number {
+    if (values.length === 0) return 0;
+    const sorted = [...values].sort((a, b) => a - b);
+    const middle = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 0 
+      ? (sorted[middle - 1] + sorted[middle]) / 2 
+      : sorted[middle];
   }
 
-  protected isValidNumber(value: any): boolean {
-    return typeof value === 'number' && !isNaN(value) && isFinite(value);
+  /**
+   * Calculate standard deviation
+   */
+  protected calculateStandardDeviation(values: number[]): number {
+    if (values.length === 0) return 0;
+    const mean = this.calculateAverage(values);
+    const squaredDiffs = values.map(value => Math.pow(value - mean, 2));
+    const avgSquaredDiff = this.calculateAverage(squaredDiffs);
+    return Math.sqrt(avgSquaredDiff);
   }
 
-  protected safeCalculate(numerator: number, denominator: number, defaultValue: number = 0): number {
-    if (!this.isValidNumber(numerator) || !this.isValidNumber(denominator) || denominator === 0) {
-      return defaultValue;
+  /**
+   * Calculate correlation coefficient between two arrays
+   */
+  protected calculateCorrelation(x: number[], y: number[]): number {
+    if (x.length !== y.length || x.length < 2) return 0;
+    
+    const n = x.length;
+    const sumX = x.reduce((a, b) => a + b, 0);
+    const sumY = y.reduce((a, b) => a + b, 0);
+    const sumXY = x.reduce((acc, xi, i) => acc + xi * y[i], 0);
+    const sumXX = x.reduce((acc, xi) => acc + xi * xi, 0);
+    const sumYY = y.reduce((acc, yi) => acc + yi * yi, 0);
+    
+    const numerator = n * sumXY - sumX * sumY;
+    const denominator = Math.sqrt((n * sumXX - sumX * sumX) * (n * sumYY - sumY * sumY));
+    
+    return denominator === 0 ? 0 : numerator / denominator;
+  }
+
+  /**
+   * Get industry benchmark data
+   */
+  protected getIndustryBenchmark(metric: string, benchmarkData?: any): any {
+    if (!benchmarkData || !benchmarkData[metric]) return null;
+    
+    return {
+      value: benchmarkData[metric].average,
+      source: 'معايير الصناعة',
+      period: 'السنة الحالية',
+      percentile: benchmarkData[metric].percentile || 50
+    };
+  }
+
+  /**
+   * Get competitor analysis data
+   */
+  protected getCompetitorAnalysis(metric: string, value: number, benchmarkData?: any): any {
+    if (!benchmarkData || !benchmarkData[metric]) return null;
+    
+    const competitors = benchmarkData[metric].competitors || [];
+    const ranking = competitors.filter((c: any) => c.value < value).length + 1;
+    
+    return {
+      competitors,
+      ranking,
+      averageCompetitorValue: this.calculateAverage(competitors.map((c: any) => c.value)),
+      position: ranking <= competitors.length / 4 ? 'متفوق' : 
+                ranking <= competitors.length / 2 ? 'متوسط' : 'أقل من المتوسط'
+    };
+  }
+
+  /**
+   * Generate insights based on value and thresholds
+   */
+  protected generateInsights(
+    value: number, 
+    thresholds: { excellent: number; good: number; average: number },
+    insights: { excellent: string; good: string; average: string; poor: string }
+  ): string[] {
+    const result: string[] = [];
+    
+    if (value >= thresholds.excellent) {
+      result.push(insights.excellent);
+    } else if (value >= thresholds.good) {
+      result.push(insights.good);
+    } else if (value >= thresholds.average) {
+      result.push(insights.average);
+    } else {
+      result.push(insights.poor);
     }
-    return numerator / denominator;
+    
+    return result.filter(Boolean);
   }
 
-  protected generateInsights(metricName: string, value: number, rating: string, category: string): string[] {
-    const insights: string[] = [];
+  /**
+   * Generate recommendations based on value and thresholds
+   */
+  protected generateRecommendations(
+    value: number, 
+    thresholds: { excellent: number; good: number; average: number },
+    recommendations: { excellent: string; good: string; average: string; poor: string }
+  ): string[] {
+    const result: string[] = [];
     
-    // Generic insights based on rating
-    switch (rating) {
-      case 'excellent':
-        insights.push(`${metricName} في المستوى الممتاز ويتفوق على معايير الصناعة`);
-        break;
-      case 'good':
-        insights.push(`${metricName} في مستوى جيد ويقارب أفضل الممارسات`);
-        break;
-      case 'average':
-        insights.push(`${metricName} في المستوى المتوسط ويحتاج للتحسين`);
-        break;
-      case 'poor':
-        insights.push(`${metricName} أقل من المطلوب ويحتاج لانتباه فوري`);
-        break;
-    }
-
-    return insights;
-  }
-
-  protected generateRecommendations(metricName: string, value: number, rating: string, category: string): string[] {
-    const recommendations: string[] = [];
-    
-    if (rating === 'poor' || rating === 'average') {
-      switch (category) {
-        case 'liquidity':
-          recommendations.push('تحسين إدارة التدفق النقدي وتسريع دورة رأس المال العامل');
-          recommendations.push('مراجعة سياسات الائتمان وإجراءات التحصيل');
-          break;
-        case 'profitability':
-          recommendations.push('مراجعة هيكل التكاليف وتحسين كفاءة العمليات');
-          recommendations.push('تطوير استراتيجيات التسعير وتحسين هوامش الربح');
-          break;
-        case 'efficiency':
-          recommendations.push('تحسين استغلال الأصول وتقليل الهدر في العمليات');
-          recommendations.push('مراجعة العمليات التشغيلية وتحسين الإنتاجية');
-          break;
-        case 'leverage':
-          recommendations.push('مراجعة هيكل رأس المال وتحسين نسب المديونية');
-          recommendations.push('تقليل الاعتماد على الديون وتعزيز حقوق الملكية');
-          break;
-      }
+    if (value >= thresholds.excellent) {
+      result.push(recommendations.excellent);
+    } else if (value >= thresholds.good) {
+      result.push(recommendations.good);
+    } else if (value >= thresholds.average) {
+      result.push(recommendations.average);
+    } else {
+      result.push(recommendations.poor);
     }
     
-    return recommendations;
+    return result.filter(Boolean);
   }
 
-  protected calculateZScore(value: number, mean: number, stdDev: number): number {
-    if (stdDev === 0) return 0;
-    return (value - mean) / stdDev;
-  }
-
-  protected normalizeValue(value: number, min: number, max: number): number {
-    if (max === min) return 0;
-    return (value - min) / (max - min);
-  }
-
-  protected weightedAverage(values: number[], weights: number[]): number {
-    if (values.length !== weights.length || values.length === 0) return 0;
+  /**
+   * Calculate trend analysis
+   */
+  protected calculateTrend(values: number[]): {
+    direction: 'up' | 'down' | 'stable';
+    slope: number;
+    rSquared: number;
+  } {
+    if (values.length < 2) {
+      return { direction: 'stable', slope: 0, rSquared: 0 };
+    }
     
-    const weightedSum = values.reduce((sum, value, index) => sum + (value * weights[index]), 0);
-    const totalWeight = weights.reduce((sum, weight) => sum + weight, 0);
+    const n = values.length;
+    const x = Array.from({length: n}, (_, i) => i);
+    const sumX = x.reduce((a, b) => a + b, 0);
+    const sumY = values.reduce((a, b) => a + b, 0);
+    const sumXY = x.reduce((acc, xi, i) => acc + xi * values[i], 0);
+    const sumXX = x.reduce((acc, xi) => acc + xi * xi, 0);
+    const sumYY = values.reduce((acc, yi) => acc + yi * yi, 0);
     
-    return totalWeight === 0 ? 0 : weightedSum / totalWeight;
+    const slope = (n * sumXY - sumX * sumY) / (n * sumXX - sumX * sumX);
+    const meanY = sumY / n;
+    const ssRes = values.reduce((acc, yi, i) => acc + Math.pow(yi - (slope * i + (sumY - slope * sumX) / n), 2), 0);
+    const ssTot = values.reduce((acc, yi) => acc + Math.pow(yi - meanY, 2), 0);
+    const rSquared = 1 - (ssRes / ssTot);
+    
+    let direction: 'up' | 'down' | 'stable' = 'stable';
+    if (Math.abs(slope) > 0.1) {
+      direction = slope > 0 ? 'up' : 'down';
+    }
+    
+    return { direction, slope, rSquared };
   }
 
+  /**
+   * Calculate volatility (standard deviation of returns)
+   */
   protected calculateVolatility(values: number[]): number {
     if (values.length < 2) return 0;
     
-    const mean = values.reduce((sum, value) => sum + value, 0) / values.length;
-    const variance = values.reduce((sum, value) => sum + Math.pow(value - mean, 2), 0) / values.length;
-    
-    return Math.sqrt(variance);
-  }
-
-  protected findOutliers(values: number[]): number[] {
-    if (values.length < 4) return [];
-    
-    const sorted = [...values].sort((a, b) => a - b);
-    const q1Index = Math.floor(sorted.length * 0.25);
-    const q3Index = Math.floor(sorted.length * 0.75);
-    
-    const q1 = sorted[q1Index];
-    const q3 = sorted[q3Index];
-    const iqr = q3 - q1;
-    
-    const lowerBound = q1 - 1.5 * iqr;
-    const upperBound = q3 + 1.5 * iqr;
-    
-    return values.filter(value => value < lowerBound || value > upperBound);
-  }
-
-  protected calculateMovingAverage(values: number[], periods: number): number[] {
-    if (values.length < periods) return values;
-    
-    const movingAverages: number[] = [];
-    for (let i = periods - 1; i < values.length; i++) {
-      const sum = values.slice(i - periods + 1, i + 1).reduce((a, b) => a + b, 0);
-      movingAverages.push(sum / periods);
-    }
-    
-    return movingAverages;
-  }
-
-  protected calculateRSI(prices: number[], periods: number = 14): number {
-    if (prices.length < periods + 1) return 50;
-    
-    let gains = 0;
-    let losses = 0;
-    
-    for (let i = 1; i <= periods; i++) {
-      const change = prices[i] - prices[i - 1];
-      if (change > 0) gains += change;
-      else losses -= change;
-    }
-    
-    const avgGain = gains / periods;
-    const avgLoss = losses / periods;
-    
-    if (avgLoss === 0) return 100;
-    
-    const rs = avgGain / avgLoss;
-    return 100 - (100 / (1 + rs));
-  }
-
-  protected generateAdvancedInsights(
-    metricName: string, 
-    currentValue: number, 
-    historicalValues: number[], 
-    benchmarkValue?: number
-  ): string[] {
-    const insights: string[] = [];
-    
-    // Trend analysis
-    if (historicalValues.length >= 3) {
-      const trend = this.calculateTrend(historicalValues);
-      const volatility = this.calculateVolatility(historicalValues);
-      
-      if (trend === 'up') {
-        insights.push(`${metricName} يُظهر اتجاهاً تصاعدياً إيجابياً`);
-      } else if (trend === 'down') {
-        insights.push(`${metricName} يُظهر اتجاهاً تنازلياً يحتاج للمراجعة`);
-      }
-      
-      if (volatility > 0.2) {
-        insights.push(`${metricName} يُظهر تذبذباً عالياً في الأداء`);
+    const returns = [];
+    for (let i = 1; i < values.length; i++) {
+      if (values[i-1] !== 0) {
+        returns.push((values[i] - values[i-1]) / values[i-1]);
       }
     }
     
-    // Benchmark comparison
-    if (benchmarkValue !== undefined) {
-      const difference = ((currentValue - benchmarkValue) / benchmarkValue) * 100;
-      if (Math.abs(difference) > 10) {
-        insights.push(
-          difference > 0 
-            ? `${metricName} يتفوق على معيار الصناعة بنسبة ${difference.toFixed(1)}%`
-            : `${metricName} أقل من معيار الصناعة بنسبة ${Math.abs(difference).toFixed(1)}%`
-        );
-      }
-    }
-    
-    return insights;
+    return this.calculateStandardDeviation(returns);
   }
 
-  protected assessRiskLevel(
-    metricName: string, 
-    currentValue: number, 
-    category: string, 
-    rating: string
-  ): {
-    level: 'low' | 'medium' | 'high';
-    factors: string[];
-    mitigation: string[];
-  } {
-    let level: 'low' | 'medium' | 'high' = 'medium';
-    const factors: string[] = [];
-    const mitigation: string[] = [];
+  /**
+   * Calculate Sharpe ratio
+   */
+  protected calculateSharpeRatio(returns: number[], riskFreeRate: number = 0.03): number {
+    if (returns.length === 0) return 0;
     
-    // Determine risk level based on rating and category
-    if (rating === 'poor') {
-      level = 'high';
-      factors.push(`${metricName} في مستوى ضعيف يتطلب تدخل فوري`);
-    } else if (rating === 'average') {
-      level = 'medium';
-      factors.push(`${metricName} في مستوى متوسط يحتاج للتحسين`);
-    } else {
-      level = 'low';
+    const avgReturn = this.calculateAverage(returns);
+    const volatility = this.calculateStandardDeviation(returns);
+    
+    return volatility === 0 ? 0 : (avgReturn - riskFreeRate) / volatility;
+  }
+
+  /**
+   * Calculate Value at Risk (VaR)
+   */
+  protected calculateVaR(returns: number[], confidenceLevel: number = 0.05): number {
+    if (returns.length === 0) return 0;
+    
+    const sortedReturns = [...returns].sort((a, b) => a - b);
+    const index = Math.floor(confidenceLevel * sortedReturns.length);
+    
+    return sortedReturns[index] || 0;
+  }
+
+  /**
+   * Calculate beta coefficient
+   */
+  protected calculateBeta(assetReturns: number[], marketReturns: number[]): number {
+    if (assetReturns.length !== marketReturns.length || assetReturns.length < 2) return 1;
+    
+    const covariance = this.calculateCovariance(assetReturns, marketReturns);
+    const marketVariance = this.calculateVariance(marketReturns);
+    
+    return marketVariance === 0 ? 1 : covariance / marketVariance;
+  }
+
+  /**
+   * Calculate covariance between two arrays
+   */
+  protected calculateCovariance(x: number[], y: number[]): number {
+    if (x.length !== y.length || x.length < 2) return 0;
+    
+    const meanX = this.calculateAverage(x);
+    const meanY = this.calculateAverage(y);
+    
+    let sum = 0;
+    for (let i = 0; i < x.length; i++) {
+      sum += (x[i] - meanX) * (y[i] - meanY);
     }
     
-    // Category-specific risk factors
-    switch (category) {
-      case 'liquidity':
-        if (level === 'high') {
-          factors.push('مخاطر عدم القدرة على الوفاء بالالتزامات قصيرة الأجل');
-          mitigation.push('تحسين إدارة التدفق النقدي');
-          mitigation.push('ترتيب خطوط ائتمان طارئة');
-        }
-        break;
-      case 'profitability':
-        if (level === 'high') {
-          factors.push('مخاطر عدم تحقيق عوائد مناسبة للمساهمين');
-          mitigation.push('مراجعة استراتيجية التسعير');
-          mitigation.push('تحسين كفاءة العمليات');
-        }
-        break;
-      case 'leverage':
-        if (level === 'high') {
-          factors.push('مخاطر عالية في الرفع المالي');
-          mitigation.push('تقليل مستوى المديونية');
-          mitigation.push('تعزيز حقوق الملكية');
-        }
-        break;
-    }
+    return sum / (x.length - 1);
+  }
+
+  /**
+   * Calculate variance of an array
+   */
+  protected calculateVariance(values: number[]): number {
+    if (values.length < 2) return 0;
     
-    return { level, factors, mitigation };
+    const mean = this.calculateAverage(values);
+    const squaredDiffs = values.map(value => Math.pow(value - mean, 2));
+    
+    return this.calculateAverage(squaredDiffs);
+  }
+
+  /**
+   * Validate financial statement data
+   */
+  protected validateFinancialStatement(statement: FinancialStatement): boolean {
+    if (!statement.balanceSheet || !statement.incomeStatement) return false;
+    
+    const { balanceSheet, incomeStatement } = statement;
+    
+    // Basic validation
+    if (balanceSheet.totalAssets <= 0) return false;
+    if (incomeStatement.revenue < 0) return false;
+    
+    // Balance sheet equation validation
+    const totalLiabilitiesAndEquity = (balanceSheet.totalLiabilities || 0) + (balanceSheet.shareholdersEquity || 0);
+    if (Math.abs(balanceSheet.totalAssets - totalLiabilitiesAndEquity) > 0.01) return false;
+    
+    return true;
+  }
+
+  /**
+   * Get financial statement summary
+   */
+  protected getFinancialStatementSummary(statement: FinancialStatement): any {
+    return {
+      year: statement.year,
+      revenue: statement.incomeStatement.revenue || 0,
+      netIncome: statement.incomeStatement.netIncome || 0,
+      totalAssets: statement.balanceSheet.totalAssets || 0,
+      totalLiabilities: statement.balanceSheet.totalLiabilities || 0,
+      shareholdersEquity: statement.balanceSheet.shareholdersEquity || 0,
+      currentAssets: statement.balanceSheet.currentAssets || 0,
+      currentLiabilities: statement.balanceSheet.currentLiabilities || 0,
+      operatingCashFlow: statement.cashFlowStatement?.operatingCashFlow || 0
+    };
   }
 }

@@ -1,5 +1,5 @@
 // src/analysis/level1_basic/structural_analysis.ts
-import { FinancialData, AnalysisResult } from '../../types/financial';
+import { FinancialData, AnalysisResult } from '@/types';
 
 /**
  * التحليل الهيكلي للقوائم المالية
@@ -48,8 +48,8 @@ export class StructuralAnalysis {
         }
       },
       nonCurrentAssets: {
-        value: this.data.balanceSheet.nonCurrentAssets,
-        percentage: (this.data.balanceSheet.nonCurrentAssets / totalAssets) * 100,
+        value: this.data.balanceSheet.totalNonCurrentAssets,
+        percentage: (this.data.balanceSheet.totalNonCurrentAssets / totalAssets) * 100,
         components: {
           propertyPlantEquipment: {
             value: this.data.balanceSheet.propertyPlantEquipment,
@@ -72,17 +72,17 @@ export class StructuralAnalysis {
         percentageOfLiabilities: (this.data.balanceSheet.currentLiabilities / totalLiabilities) * 100
       },
       nonCurrentLiabilities: {
-        value: this.data.balanceSheet.nonCurrentLiabilities,
-        percentage: (this.data.balanceSheet.nonCurrentLiabilities / totalAssets) * 100,
-        percentageOfLiabilities: (this.data.balanceSheet.nonCurrentLiabilities / totalLiabilities) * 100
+        value: this.data.balanceSheet.totalNonCurrentLiabilities,
+        percentage: (this.data.balanceSheet.totalNonCurrentLiabilities / totalAssets) * 100,
+        percentageOfLiabilities: (this.data.balanceSheet.totalNonCurrentLiabilities / totalLiabilities) * 100
       }
     };
 
     // تحليل حقوق الملكية
     results.equity = {
       totalEquity: {
-        value: this.data.balanceSheet.totalEquity,
-        percentage: (this.data.balanceSheet.totalEquity / totalAssets) * 100
+        value: this.data.balanceSheet.totalShareholdersEquity,
+        percentage: (this.data.balanceSheet.totalShareholdersEquity / totalAssets) * 100
       },
       retainedEarnings: {
         value: this.data.balanceSheet.retainedEarnings,
@@ -173,10 +173,10 @@ export class StructuralAnalysis {
           changePercentage: ((currentYear.currentAssets - previousYear.currentAssets) / previousYear.currentAssets) * 100
         },
         nonCurrentAssets: {
-          currentYear: currentYear.nonCurrentAssets,
-          previousYear: previousYear.nonCurrentAssets,
-          change: currentYear.nonCurrentAssets - previousYear.nonCurrentAssets,
-          changePercentage: ((currentYear.nonCurrentAssets - previousYear.nonCurrentAssets) / previousYear.nonCurrentAssets) * 100
+          currentYear: currentYear.totalNonCurrentAssets,
+          previousYear: previousYear.totalNonCurrentAssets,
+          change: currentYear.totalNonCurrentAssets - previousYear.totalNonCurrentAssets,
+          changePercentage: ((currentYear.totalNonCurrentAssets - previousYear.totalNonCurrentAssets) / previousYear.totalNonCurrentAssets) * 100
         }
       },
       liabilities: {
@@ -189,10 +189,10 @@ export class StructuralAnalysis {
       },
       equity: {
         totalEquity: {
-          currentYear: currentYear.totalEquity,
-          previousYear: previousYear.totalEquity,
-          change: currentYear.totalEquity - previousYear.totalEquity,
-          changePercentage: ((currentYear.totalEquity - previousYear.totalEquity) / previousYear.totalEquity) * 100
+          currentYear: currentYear.totalShareholdersEquity,
+          previousYear: previousYear.totalShareholdersEquity,
+          change: currentYear.totalShareholdersEquity - previousYear.totalShareholdersEquity,
+          changePercentage: ((currentYear.totalShareholdersEquity - previousYear.totalShareholdersEquity) / previousYear.totalShareholdersEquity) * 100
         }
       }
     };
@@ -257,8 +257,8 @@ export class StructuralAnalysis {
         index: (yearData.totalAssets / baseYear.totalAssets) * 100
       },
       totalEquity: {
-        value: yearData.totalEquity,
-        index: (yearData.totalEquity / baseYear.totalEquity) * 100
+        value: yearData.totalShareholdersEquity,
+        index: (yearData.totalShareholdersEquity / baseYear.totalShareholdersEquity) * 100
       }
     }));
 
@@ -307,8 +307,8 @@ export class StructuralAnalysis {
    * Statement of Changes in Equity Analysis
    */
   equityChangesAnalysis(): AnalysisResult {
-    const beginningEquity = this.data.previousYearBalanceSheet.totalEquity;
-    const endingEquity = this.data.balanceSheet.totalEquity;
+    const beginningEquity = this.data.previousYearBalanceSheet.totalShareholdersEquity;
+    const endingEquity = this.data.balanceSheet.totalShareholdersEquity;
     
     const changes = {
       beginningBalance: beginningEquity,
@@ -346,9 +346,9 @@ export class StructuralAnalysis {
    * Capital Structure Analysis
    */
   capitalStructureAnalysis(): AnalysisResult {
-    const totalCapital = this.data.balanceSheet.totalLiabilities + this.data.balanceSheet.totalEquity;
+    const totalCapital = this.data.balanceSheet.totalLiabilities + this.data.balanceSheet.totalShareholdersEquity;
     const debtCapital = this.data.balanceSheet.totalLiabilities;
-    const equityCapital = this.data.balanceSheet.totalEquity;
+    const equityCapital = this.data.balanceSheet.totalShareholdersEquity;
     
     const results = {
       capitalComponents: {
@@ -361,8 +361,8 @@ export class StructuralAnalysis {
               percentage: (this.data.balanceSheet.currentLiabilities / totalCapital) * 100
             },
             longTerm: {
-              amount: this.data.balanceSheet.nonCurrentLiabilities,
-              percentage: (this.data.balanceSheet.nonCurrentLiabilities / totalCapital) * 100
+              amount: this.data.balanceSheet.totalNonCurrentLiabilities,
+              percentage: (this.data.balanceSheet.totalNonCurrentLiabilities / totalCapital) * 100
             }
           }
         },
@@ -488,7 +488,7 @@ export class StructuralAnalysis {
     const results = {
       assetComposition: {
         currentAssetsRatio: (assets.currentAssets / assets.totalAssets) * 100,
-        fixedAssetsRatio: (assets.nonCurrentAssets / assets.totalAssets) * 100,
+        fixedAssetsRatio: (assets.totalNonCurrentAssets / assets.totalAssets) * 100,
         liquidAssets: (assets.cash + assets.marketableSecurities) / assets.totalAssets * 100
       },
       assetTurnover: {
@@ -523,7 +523,7 @@ export class StructuralAnalysis {
     const results = {
       liabilityComposition: {
         currentLiabilitiesRatio: (liabilities.currentLiabilities / liabilities.totalLiabilities) * 100,
-        longTermLiabilitiesRatio: (liabilities.nonCurrentLiabilities / liabilities.totalLiabilities) * 100
+        longTermLiabilitiesRatio: (liabilities.totalNonCurrentLiabilities / liabilities.totalLiabilities) * 100
       },
       debtStructure: {
         shortTermDebt: liabilities.shortTermDebt,

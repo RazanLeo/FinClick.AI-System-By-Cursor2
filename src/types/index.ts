@@ -161,35 +161,6 @@ export interface CashFlowStatement {
   cashEndPeriod: number;
 }
 
-export interface AnalysisResult {
-  id: string;
-  type: AnalysisType;
-  name: string;
-  nameEn: string;
-  category: AnalysisCategory;
-  definition: string;
-  whatItMeasures: string;
-  importance: string;
-  calculation: string;
-  result: number | string | any;
-  interpretation: string;
-  industryAverage?: number;
-  comparisonWithIndustry?: string;
-  benchmarkComparison?: any;
-  rating: 'excellent' | 'veryGood' | 'good' | 'acceptable' | 'weak';
-  recommendation: string;
-  charts?: ChartData[];
-  detailedAnalysis?: string;
-  risks?: string[];
-  opportunities?: string[];
-  swot?: {
-    strengths: string[];
-    weaknesses: string[];
-    opportunities: string[];
-    threats: string[];
-  };
-}
-
 export interface ChartData {
   type: 'line' | 'bar' | 'pie' | 'radar' | 'scatter' | 'area';
   data: any;
@@ -515,3 +486,240 @@ export const LEGAL_ENTITIES = {
   multinational: 'شركة متعددة الجنسيات',
   professional: 'شركة مهنية'
 };
+
+// Financial Analysis Types
+export interface FinancialData {
+  balanceSheet: {
+    currentAssets: number;
+    currentLiabilities: number;
+    inventory: number;
+    cash: number;
+    marketableSecurities: number;
+    accountsReceivable: number;
+    accountsPayable: number;
+    shortTermDebt: number;
+    longTermDebt: number;
+    totalAssets: number;
+    totalLiabilities: number;
+    shareholdersEquity: number;
+    propertyPlantEquipment: number;
+    accumulatedDepreciation: number;
+    netPPE: number;
+    intangibleAssets: number;
+    goodwill: number;
+    longTermInvestments: number;
+    otherCurrentAssets: number;
+    otherNonCurrentAssets: number;
+    totalNonCurrentAssets: number;
+    totalCurrentAssets: number;
+    totalNonCurrentLiabilities: number;
+    totalCurrentLiabilities: number;
+    commonStock: number;
+    preferredStock: number;
+    additionalPaidInCapital: number;
+    retainedEarnings: number;
+    treasuryStock: number;
+    accumulatedOtherComprehensiveIncome: number;
+    totalShareholdersEquity: number;
+    totalLiabilitiesAndEquity: number;
+  };
+  incomeStatement: {
+    revenue: number;
+    costOfGoodsSold: number;
+    grossProfit: number;
+    operatingIncome: number;
+    netIncome: number;
+    ebit: number;
+    ebitda: number;
+    operatingExpenses: number;
+    depreciation: number;
+    amortization: number;
+    interestExpense: number;
+    taxExpense: number;
+    otherIncome: number;
+    otherExpenses: number;
+    sellingExpenses: number;
+    adminExpenses: number;
+    researchExpenses: number;
+    marketingExpenses: number;
+    variableCosts: number;
+    fixedCosts: number;
+    directCosts: number;
+    indirectCosts: number;
+    researchDevelopment: number;
+  };
+  cashFlowStatement: {
+    operatingCashFlow: number;
+    investingCashFlow: number;
+    financingCashFlow: number;
+    freeCashFlow: number;
+    netCashFlow: number;
+    capitalExpenditures: number;
+    dividendsPaid: number;
+    stockRepurchases: number;
+    debtIssuance: number;
+    debtRepayment: number;
+    cashFromCustomers: number;
+    cashToSuppliers: number;
+    cashToEmployees: number;
+    interestPaid: number;
+    taxesPaid: number;
+    cashFromInvestments: number;
+    cashFromFinancing: number;
+    acquisitions: number;
+    assetSales: number;
+    investmentPurchases: number;
+    investmentSales: number;
+    debtIssuance: number;
+    debtRepayment: number;
+    equityIssuance: number;
+    equityRepurchase: number;
+    shareIssuance: number;
+    shareRepurchase: number;
+  };
+  marketData: {
+    sharePrice: number;
+    sharesOutstanding: number;
+    marketCap: number;
+    dividendPerShare: number;
+    earningsGrowthRate: number;
+    revenueGrowthRate: number;
+    beta: number;
+  };
+  previousYearIncomeStatement: {
+    netIncome: number;
+    revenue: number;
+    costOfGoodsSold: number;
+    grossProfit: number;
+    operatingExpenses: number;
+    operatingIncome: number;
+  };
+  previousYearBalanceSheet: {
+    currentAssets: number;
+    currentLiabilities: number;
+    totalAssets: number;
+    totalLiabilities: number;
+    totalShareholdersEquity: number;
+    inventory: number;
+    accountsReceivable: number;
+    accountsPayable: number;
+    totalNonCurrentAssets: number;
+  };
+  sharesOutstanding: number;
+  taxRate: number;
+  assumptions: {
+    growthRate: number;
+    terminalGrowthRate: number;
+    wacc: number;
+    discountRate: number;
+  };
+  historicalCashFlows?: {
+    year: number;
+    operatingCashFlow: number;
+    investingCashFlow: number;
+    financingCashFlow: number;
+    netCashFlow: number;
+  }[];
+  historicalData?: {
+    year: number;
+    revenue: number;
+    netIncome: number;
+    totalAssets: number;
+    totalLiabilities: number;
+    totalShareholdersEquity: number;
+  }[];
+  equityStatement: {
+    shareIssuance: number;
+    shareRepurchase: number;
+    otherComprehensiveIncome: number;
+    retainedEarnings: number;
+  };
+  segmentData?: {
+    name: string;
+    revenue: number;
+    operatingIncome: number;
+    assets: number;
+    liabilities: number;
+  }[];
+  geographicSegments?: {
+    region: string;
+    revenue: number;
+    operatingIncome: number;
+    assets: number;
+    marketShare: number;
+    growthRate: number;
+  }[];
+  businessSegments?: {
+    sector: string;
+    revenue: number;
+    operatingIncome: number;
+    assets: number;
+    marketShare: number;
+  }[];
+  industryData?: {
+    sectors: {
+      name: string;
+      averageROE: number;
+      averageROA: number;
+      averageDebtRatio: number;
+      averageProfitMargin: number;
+    }[];
+  };
+}
+
+export interface RatioAnalysisResult {
+  name: string;
+  englishName: string;
+  value: number;
+  unit?: string;
+  formula: string;
+  interpretation: string;
+  industryBenchmark: number;
+  evaluation: 'excellent' | 'veryGood' | 'good' | 'acceptable' | 'weak';
+  recommendations: string[];
+  additionalMetrics?: {
+    [key: string]: number;
+  };
+}
+
+export interface FlowAnalysisResult {
+  analysisName: string;
+  results: any;
+  interpretation: string;
+  recommendations: string[];
+}
+
+export interface AnalysisResult {
+  analysisName: string;
+  results: any;
+  interpretation: string;
+  recommendations: string[];
+}
+
+export interface ComparisonAnalysisResult {
+  analysisName: string;
+  results: any;
+  interpretation: string;
+  recommendations: string[];
+}
+
+export interface PerformanceAnalysisResult {
+  analysisName: string;
+  results: any;
+  interpretation: string;
+  recommendations: string[];
+}
+
+export interface ModelingAnalysisResult {
+  analysisName: string;
+  results: any;
+  interpretation: string;
+  recommendations: string[];
+}
+
+export interface ValuationAnalysisResult {
+  analysisName: string;
+  results: any;
+  interpretation: string;
+  recommendations: string[];
+}

@@ -112,7 +112,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     if (file.type.includes('pdf')) return <FileText className="w-6 h-6 text-finclick-error" />;
     if (file.type.includes('excel') || file.type.includes('spreadsheet')) return <FileText className="w-6 h-6 text-finclick-success" />;
     if (file.type.includes('word') || file.type.includes('document')) return <FileText className="w-6 h-6 text-finclick-info" />;
-    if (file.type.includes('image')) return <Image className="w-6 h-6 text-finclick-warning" />;
+    if (file.type.includes('image')) return <Image className="w-6 h-6 text-finclick-warning" />; // eslint-disable-line jsx-a11y/alt-text
     return <File className="w-6 h-6 text-finclick-gold" />;
   };
 
@@ -438,7 +438,7 @@ const FileUploader: React.FC<FileUploaderProps> = ({
             <span>Word Documents (.doc, .docx)</span>
           </div>
           <div className="flex items-center gap-2">
-            <Image className="w-4 h-4 text-finclick-warning" />
+            <Image className="w-4 h-4 text-finclick-warning" /> {/* eslint-disable-line jsx-a11y/alt-text */}
             <span>Images (.jpg, .jpeg, .png)</span>
           </div>
         </div>

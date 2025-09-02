@@ -48,6 +48,72 @@ export default function HomePage() {
   const { language, toggleLanguage } = useLanguage();
   const [isVisible, setIsVisible] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
+  
+  // المحتوى حسب البرومبت
+  const content = {
+    ar: {
+      title: "FinClick.AI",
+      subtitle: "نظام التحليل المالي الذكي والثوري",
+      slogan: "ثورة ونقلة نوعية في عالم التحليل المالي",
+      description: "نظام يقلب الدنيا رأسا على عقب ويقلب كل الموازين. ثورة يعجز أمامها جميع متخصصين وخبراء التحليل المالي العالميين",
+      whyFinClick: "لماذا FinClick.AI؟",
+      features: [
+        "ثورة ونقلة نوعية في عالم التحليل المالي",
+        "نظام يقلب الدنيا رأسا على عقب ويقلب كل الموازين",
+        "ثورة يعجز أمامها جميع متخصصين وخبراء التحليل المالي العالميين",
+        "تقديم موقع إلكتروني يعمل كمنصة ونظام كامل شامل يغنيك عن أي مدير أو محلل أو خبير مالي",
+        "يخدم كل مستفيدي التحليل المالي وكل أغراض التحليل المالي (أفراد، مؤسسات شركات، منظمات)",
+        "يقوم على الذكاء الاصطناعي",
+        "يقدم جميع أنواع التحليل المالي المعروفة في العالم. 181+ تحليل مالي",
+        "بيئة سحابية تستطيع فتحه من أي مكان وأي وقت وعلى أي متصفح وعلى أي جهاز",
+        "واجهة واضحة واحترافية وطريق عرض للتحليلات تناسب الجميع حتى لو لم تكن لديك معرفة أو خلفية مالية",
+        "السرعة – أحصل على التحليل في ثواني معدودة بضغطة زر",
+        "السهولة – 3 خطوات (أرفق قوائمك – حدد خيارات التحليل – اضغط زر التحليل)",
+        "الدقة والكفاءة المتناهية (دقة بنسبة 99%)",
+        "أمان عالي",
+        "محلل مالي خارق يساعد كل شخص يتخذ القرارات المالية اللحظية",
+        "تقارير تفصيله وعروض تقديمية",
+        "مقارنات علي جميع مستويات العالم",
+        "جودة عالمية"
+      ],
+      steps: [
+        { title: "أرفق قوائمك", description: "رفع القوائم المالية بأي صيغة" },
+        { title: "حدد خيارات التحليل", description: "اختيار نوع التحليل والمقارنة" },
+        { title: "اضغط زر التحليل", description: "احصل على 181 تحليل مالي" }
+      ]
+    },
+    en: {
+      title: "FinClick.AI",
+      subtitle: "Revolutionary Intelligent Financial Analysis System",
+      slogan: "A revolution and qualitative leap in the world of financial analysis",
+      description: "A system that turns the world upside down and changes all balances. A revolution that baffles all international financial analysis specialists and experts",
+      whyFinClick: "Why FinClick.AI?",
+      features: [
+        "A revolution and qualitative leap in the world of financial analysis",
+        "A system that turns the world upside down and changes all balances",
+        "A revolution that baffles all international financial analysis specialists and experts",
+        "Providing a website that works as a complete comprehensive platform and system that replaces any manager, analyst or financial expert",
+        "Serves all beneficiaries of financial analysis and all purposes of financial analysis (individuals, institutions, companies, organizations)",
+        "Based on artificial intelligence",
+        "Provides all types of financial analysis known in the world. 181+ financial analyses",
+        "Cloud environment that you can open from anywhere and anytime on any browser and any device",
+        "Clear and professional interface and display method for analyses that suits everyone even if you don't have financial knowledge or background",
+        "Speed - Get the analysis in seconds with one click",
+        "Ease - 3 steps (upload your statements - select analysis options - click analyze button)",
+        "Ultimate accuracy and efficiency (99% accuracy)",
+        "High security",
+        "Super financial analyst that helps everyone make instant financial decisions",
+        "Detailed reports and presentations",
+        "Comparisons at all global levels",
+        "World-class quality"
+      ],
+      steps: [
+        { title: "Upload Your Statements", description: "Upload financial statements in any format" },
+        { title: "Select Analysis Options", description: "Choose analysis type and comparison" },
+        { title: "Click Analyze Button", description: "Get 181 financial analyses" }
+      ]
+    }
+  };
 
   useEffect(() => {
     setIsVisible(true);
@@ -376,38 +442,73 @@ export default function HomePage() {
             className="text-center mb-12"
           >
             <h2 className="text-4xl font-bold text-finclick-gold mb-4 font-playfair">
-              {language === 'ar' ? 'المميزات الرئيسية' : 'Key Features'}
+              {content[language].whyFinClick}
             </h2>
-            <p className="text-xl text-finclick-gold/70 max-w-3xl mx-auto font-playfair">
-              {language === 'ar'
-                ? 'اكتشف قوة النظام المتقدم في التحليل المالي'
-                : 'Discover the power of advanced financial analysis system'
-              }
+            <p className="text-xl text-finclick-gold/70 max-w-3xl mx-auto font-playfair mb-8">
+              {content[language].slogan}
+            </p>
+            <p className="text-lg text-finclick-gold/60 max-w-4xl mx-auto font-playfair">
+              {content[language].description}
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((feature, index) => (
+          {/* المميزات المفصلة حسب البرومبت */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+            {content[language].features.map((feature, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                className="text-center p-6 bg-white/80 backdrop-blur-sm border border-finclick-gold/20 rounded-xl hover:border-finclick-gold transition-all duration-300"
+                className="p-6 bg-white/80 backdrop-blur-sm border border-finclick-gold/20 rounded-xl hover:border-finclick-gold transition-all duration-300"
               >
-                <div className="inline-flex p-3 rounded-lg bg-finclick-gold/10 text-finclick-gold mb-4">
-                  <feature.icon className="w-6 h-6" />
+                <div className="flex items-start gap-3">
+                  <div className="inline-flex p-2 rounded-lg bg-finclick-gold/10 text-finclick-gold mt-1">
+                    <CheckCircle className="w-5 h-5" />
+                  </div>
+                  <p className="text-sm text-finclick-gold/80 font-playfair leading-relaxed">
+                    {feature}
+                  </p>
                 </div>
-                <h3 className="text-lg font-semibold text-finclick-gold mb-2 font-playfair">
-                  {feature.title}
-                </h3>
-                <p className="text-sm text-finclick-gold/70 font-playfair">
-                  {feature.description}
-                </p>
               </motion.div>
             ))}
           </div>
+
+          {/* خطوات النظام */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="text-center mb-12"
+          >
+            <h3 className="text-3xl font-bold text-finclick-gold mb-8 font-playfair">
+              {language === 'ar' ? 'خطوات النظام' : 'System Steps'}
+            </h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {content[language].steps.map((step, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.2 }}
+                  viewport={{ once: true }}
+                  className="text-center p-6 bg-white/80 backdrop-blur-sm border border-finclick-gold/20 rounded-xl hover:border-finclick-gold transition-all duration-300"
+                >
+                  <div className="inline-flex p-4 rounded-full bg-finclick-gold/10 text-finclick-gold mb-4 text-2xl font-bold">
+                    {index + 1}
+                  </div>
+                  <h4 className="text-xl font-semibold text-finclick-gold mb-2 font-playfair">
+                    {step.title}
+                  </h4>
+                  <p className="text-sm text-finclick-gold/70 font-playfair">
+                    {step.description}
+                  </p>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
         </div>
       </section>
 

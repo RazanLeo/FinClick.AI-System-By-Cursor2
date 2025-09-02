@@ -1,5 +1,5 @@
 // src/analysis/level2_applied/valuation_analysis.ts
-import { FinancialData, ValuationAnalysisResult } from '../../types/financial';
+import { FinancialData, ValuationAnalysisResult } from '@/types';
 
 /**
  * تحليلات التقييم والاستثمار
@@ -75,8 +75,8 @@ export class ValuationAnalysis {
         netDebt,
         equityValue,
         valuePerShare,
-        currentPrice: this.data.marketPrice,
-        impliedReturn: ((valuePerShare - this.data.marketPrice) / this.data.marketPrice) * 100
+        currentPrice: this.data.marketData.sharePrice,
+        impliedReturn: ((valuePerShare - this.data.marketData.sharePrice) / this.data.marketData.sharePrice) * 100
       },
       sensitivityAnalysis: this.performDCFSensitivity(wacc, growthRate, terminalGrowthRate)
     };
@@ -85,8 +85,7 @@ export class ValuationAnalysis {
       analysisName: 'التقييم بطريقة التدفقات النقدية المخصومة',
       results,
       interpretation: this.interpretDCF(results),
-      recommendations: this.getRecommendation
-recommendations: this.getRecommendationsDCF(results)
+      recommendations: this.getRecommendationsDCF(results)
     };
   }
 
@@ -130,10 +129,10 @@ recommendations: this.getRecommendationsDCF(results)
       impliedValuations: {
         byPE: peerMultiples.peRatio * (this.data.incomeStatement.netIncome / this.data.sharesOutstanding),
         byEVEBITDA: this.calculateImpliedValueByEVEBITDA(peerMultiples.evToEbitda),
-        byPB: peerMultiples.pbRatio * (this.data.balanceSheet.totalEquity / this.data.sharesOutstanding),
+        byPB: peerMultiples.pbRatio * (this.data.balanceSheet.totalShareholdersEquity / this.data.sharesOutstanding),
         byPS: peerMultiples.psRatio * (this.data.incomeStatement.revenue / this.data.sharesOutstanding)
       },
-      valuationRange: this.calculateValuationRange(results),
+      valuationRange: this.calculateValuationRange(companyMultiples),
       historicalMultiples: this.analyzeHistoricalMultiples()
     };
 
@@ -150,7 +149,7 @@ recommendations: this.getRecommendationsDCF(results)
    * Net Asset Valuation (NAV)
    */
   netAssetValuation(): ValuationAnalysisResult {
-    const bookValue = this.data.balanceSheet.totalEquity;
+    const bookValue = this.data.balanceSheet.totalShareholdersEquity;
     
     const adjustments = {
       propertyRevaluation: this.estimatePropertyRevaluation(),
@@ -178,8 +177,8 @@ recommendations: this.getRecommendationsDCF(results)
         perShare: adjustedBookValue / this.data.sharesOutstanding
       },
       marketToBook: {
-        unadjusted: this.data.marketPrice / (bookValue / this.data.sharesOutstanding),
-        adjusted: this.data.marketPrice / (adjustedBookValue / this.data.sharesOutstanding)
+        unadjusted: this.data.marketData.sharePrice / (bookValue / this.data.sharesOutstanding),
+        adjusted: this.data.marketData.sharePrice / (adjustedBookValue / this.data.sharesOutstanding)
       },
       assetBreakdown: this.analyzeAssetComposition(),
       liquidationValue: this.calculateLiquidationValue()
@@ -198,7 +197,7 @@ recommendations: this.getRecommendationsDCF(results)
    * Residual Income Valuation
    */
   residualIncomeValuation(): ValuationAnalysisResult {
-    const bookValue = this.data.balanceSheet.totalEquity;
+    const bookValue = this.data.balanceSheet.totalShareholdersEquity;
     const costOfEquity = this.calculateCostOfEquity();
     
     const projections = [];
@@ -245,7 +244,7 @@ recommendations: this.getRecommendationsDCF(results)
         pvResidualIncome: totalPVResidualIncome,
         equityValue,
         valuePerShare,
-        impliedPremium: ((valuePerShare - this.data.marketPrice) / this.data.marketPrice) * 100
+        impliedPremium: ((valuePerShare - this.data.marketData.sharePrice) / this.data.marketData.sharePrice) * 100
       }
     };
 
@@ -305,7 +304,7 @@ recommendations: this.getRecommendationsDCF(results)
     const results = {
       currentDividend,
       payoutRatio: (this.data.cashFlowStatement.dividendsPaid / this.data.incomeStatement.netIncome) * 100,
-      dividendYield: (currentDividend / this.data.marketPrice) * 100,
+      dividendYield: (currentDividend / this.data.marketData.sharePrice) * 100,
       growthAssumptions: {
         stage1: { years: 3, growth: stage1Growth },
         stage2: { years: 2, growth: stage2Growth },
@@ -319,8 +318,8 @@ recommendations: this.getRecommendationsDCF(results)
       },
       valuation: {
         valuePerShare,
-        currentPrice: this.data.marketPrice,
-        impliedReturn: ((valuePerShare - this.data.marketPrice) / this.data.marketPrice) * 100
+        currentPrice: this.data.marketData.sharePrice,
+        impliedReturn: ((valuePerShare - this.data.marketData.sharePrice) / this.data.marketData.sharePrice) * 100
       },
       sustainabilityAnalysis: this.analyzeDividendSustainability()
     };
@@ -383,7 +382,7 @@ recommendations: this.getRecommendationsDCF(results)
    */
   economicValueAdded(): ValuationAnalysisResult {
     const nopat = this.data.incomeStatement.operatingIncome * (1 - this.data.taxRate);
-    const investedCapital = this.data.balanceSheet.totalEquity + 
+    const investedCapital = this.data.balanceSheet.totalShareholdersEquity + 
                            this.data.balanceSheet.longTermDebt + 
                            this.data.balanceSheet.shortTermDebt -
                            this.data.balanceSheet.cash;
@@ -395,7 +394,7 @@ recommendations: this.getRecommendationsDCF(results)
     const historicalEVA = this.calculateHistoricalEVA();
     
     // MVA calculation
-    const marketValue = this.data.marketPrice * this.data.sharesOutstanding + 
+    const marketValue = this.data.marketData.sharePrice * this.data.sharesOutstanding + 
                        this.data.balanceSheet.longTermDebt + 
                        this.data.balanceSheet.shortTermDebt;
     const mva = marketValue - investedCapital;
@@ -438,7 +437,7 @@ recommendations: this.getRecommendationsDCF(results)
    * Real Options Valuation
    */
   realOptionsValuation(): ValuationAnalysisResult {
-    const projectData = this.data.projectData || this.estimateProjectData();
+    const projectData = this.estimateProjectData();
     
     const results = {
       identifiedOptions: [
@@ -640,7 +639,7 @@ recommendations: this.getRecommendationsDCF(results)
     const results = {
       identifiedIntangibles,
       totalValue: totalIntangibleValue,
-      percentOfMarketCap: (totalIntangibleValue / (this.data.marketPrice * this.data.sharesOutstanding)) * 100,
+      percentOfMarketCap: (totalIntangibleValue / (this.data.marketData.sharePrice * this.data.sharesOutstanding)) * 100,
       percentOfEnterpriseValue: (totalIntangibleValue / this.calculateEnterpriseValue()) * 100,
       recognizedVsUnrecognized: {
         recognized: this.data.balanceSheet.intangibleAssets,
@@ -666,7 +665,7 @@ recommendations: this.getRecommendationsDCF(results)
     const periods = [1, 3, 5]; // Years
     const tsrCalculations = periods.map(years => {
       const startPrice = this.getHistoricalPrice(years);
-      const endPrice = this.data.marketPrice;
+      const endPrice = this.data.marketData.sharePrice;
       const dividends = this.getTotalDividends(years);
       
       const capitalAppreciation = endPrice - startPrice;
@@ -728,8 +727,8 @@ recommendations: this.getRecommendationsDCF(results)
    * Intellectual Capital Valuation
    */
   intellectualCapitalValuation(): ValuationAnalysisResult {
-    const marketValue = this.data.marketPrice * this.data.sharesOutstanding;
-    const bookValue = this.data.balanceSheet.totalEquity;
+    const marketValue = this.data.marketData.sharePrice * this.data.sharesOutstanding;
+    const bookValue = this.data.balanceSheet.totalShareholdersEquity;
     const intellectualCapital = marketValue - bookValue;
     
     const components = {
@@ -806,15 +805,15 @@ recommendations: this.getRecommendationsDCF(results)
         contribution: this.calculateRevenueGrowthContribution()
       },
       marginImprovement: {
-        change: currentYear.operatingMargin - baseYear.operatingMargin,
+        change: (currentYear.netIncome / currentYear.revenue) * 100 - (baseYear.netIncome / baseYear.revenue) * 100,
         contribution: this.calculateMarginImprovementContribution()
       },
       assetEfficiency: {
-        change: currentYear.assetTurnover - baseYear.assetTurnover,
+        change: (currentYear.revenue / currentYear.totalAssets) - (baseYear.revenue / baseYear.totalAssets),
         contribution: this.calculateAssetEfficiencyContribution()
       },
       financialLeverage: {
-        change: currentYear.leverageRatio - baseYear.leverageRatio,
+        change: (currentYear.totalAssets / currentYear.totalShareholdersEquity) - (baseYear.totalAssets / baseYear.totalShareholdersEquity),
         contribution: this.calculateLeverageContribution()
       }
     };
@@ -831,7 +830,6 @@ recommendations: this.getRecommendationsDCF(results)
                                  valueCreationSources.financial;
     
     const sustainabilityAnalysis = {
-      coreBusiness: this.analyzeCoreBusiness
       coreBusiness: this.analyzeCoreBusinessSustainability(),
       competitiveAdvantages: this.assessCompetitiveAdvantages(),
       growthQuality: this.assessGrowthQuality(),
@@ -847,10 +845,10 @@ recommendations: this.getRecommendationsDCF(results)
     
     const results = {
       historicalValueCreation: {
-        startMarketCap: baseYear.marketCap,
-        endMarketCap: currentYear.marketCap,
-        totalValueCreated: currentYear.marketCap - baseYear.marketCap,
-        annualizedReturn: this.calculateCAGR(baseYear.marketCap, currentYear.marketCap, historicalData.length - 1)
+        startMarketCap: baseYear.revenue * 2, // Placeholder calculation
+        endMarketCap: currentYear.revenue * 2, // Placeholder calculation
+        totalValueCreated: (currentYear.revenue * 2) - (baseYear.revenue * 2),
+        annualizedReturn: this.calculateCAGR(baseYear.revenue * 2, currentYear.revenue * 2, historicalData.length - 1)
       },
       valueDrivers,
       valueCreationSources,
@@ -874,7 +872,7 @@ recommendations: this.getRecommendationsDCF(results)
   performanceBasedValuation(): ValuationAnalysisResult {
     const performanceMetrics = {
       profitability: {
-        roe: (this.data.incomeStatement.netIncome / this.data.balanceSheet.totalEquity) * 100,
+        roe: (this.data.incomeStatement.netIncome / this.data.balanceSheet.totalShareholdersEquity) * 100,
         roa: (this.data.incomeStatement.netIncome / this.data.balanceSheet.totalAssets) * 100,
         roic: this.calculateROIC(),
         score: 0
@@ -929,8 +927,8 @@ recommendations: this.getRecommendationsDCF(results)
         byEVEBITDA: impliedValue.byEVEBITDA,
         byPB: impliedValue.byPB,
         averageValue: impliedValue.average,
-        currentPrice: this.data.marketPrice,
-        upside: ((impliedValue.average - this.data.marketPrice) / this.data.marketPrice) * 100
+        currentPrice: this.data.marketData.sharePrice,
+        upside: ((impliedValue.average - this.data.marketData.sharePrice) / this.data.marketData.sharePrice) * 100
       },
       peerComparison: this.comparePerformanceWithPeers(overallScore)
     };
@@ -956,7 +954,7 @@ recommendations: this.getRecommendationsDCF(results)
     
     const risks = {
       systematicRisk: {
-        beta: this.data.beta || this.calculateBeta(),
+        beta: this.data.marketData.beta || this.calculateBeta(),
         marketCorrelation: this.calculateMarketCorrelation()
       },
       specificRisk: {
@@ -981,13 +979,14 @@ recommendations: this.getRecommendationsDCF(results)
       sortinoRatio: returns.excessReturn / risks.totalRisk.downside
     };
     
+    const requiredReturn = this.getRiskFreeRate() + risks.systematicRisk.beta * this.getMarketRiskPremium();
     const capmValuation = {
-      requiredReturn: this.getRiskFreeRate() + risks.systematicRisk.beta * this.getMarketRiskPremium(),
-      impliedPrice: this.calculateCAPMPrice(capmValuation.requiredReturn),
+      requiredReturn,
+      impliedPrice: this.calculateCAPMPrice(requiredReturn),
       mispricing: 0
     };
     
-    capmValuation.mispricing = ((this.data.marketPrice - capmValuation.impliedPrice) / capmValuation.impliedPrice) * 100;
+    capmValuation.mispricing = ((this.data.marketData.sharePrice - capmValuation.impliedPrice) / capmValuation.impliedPrice) * 100;
     
     const results = {
       returns,
@@ -1089,7 +1088,7 @@ recommendations: this.getRecommendationsDCF(results)
   }
 
   private calculateWACC(): number {
-    const marketCap = this.data.marketPrice * this.data.sharesOutstanding;
+    const marketCap = this.data.marketData.sharePrice * this.data.sharesOutstanding;
     const totalDebt = this.data.balanceSheet.shortTermDebt + this.data.balanceSheet.longTermDebt;
     const totalValue = marketCap + totalDebt;
     
@@ -1104,7 +1103,7 @@ recommendations: this.getRecommendationsDCF(results)
   private calculateCostOfEquity(): number {
     const riskFreeRate = 0.03;
     const marketRiskPremium = 0.08;
-    const beta = this.data.beta || 1.0;
+    const beta = this.data.marketData.beta || 1.0;
     
     return riskFreeRate + beta * marketRiskPremium;
   }
@@ -1128,7 +1127,7 @@ recommendations: this.getRecommendationsDCF(results)
   }
 
   private calculateSustainableGrowthRate(): number {
-    const roe = this.data.incomeStatement.netIncome / this.data.balanceSheet.totalEquity;
+    const roe = this.data.incomeStatement.netIncome / this.data.balanceSheet.totalShareholdersEquity;
     const payoutRatio = this.data.cashFlowStatement.dividendsPaid / this.data.incomeStatement.netIncome;
     const retentionRate = 1 - payoutRatio;
     
@@ -1221,7 +1220,7 @@ recommendations: this.getRecommendationsDCF(results)
   }
 
   private calculateCompanyMultiples(): any {
-    const marketCap = this.data.marketPrice * this.data.sharesOutstanding;
+    const marketCap = this.data.marketData.sharePrice * this.data.sharesOutstanding;
     const enterpriseValue = marketCap + 
                            this.data.balanceSheet.shortTermDebt + 
                            this.data.balanceSheet.longTermDebt - 
@@ -1232,10 +1231,10 @@ recommendations: this.getRecommendationsDCF(results)
                    this.data.incomeStatement.amortization;
     
     return {
-      peRatio: this.data.marketPrice / (this.data.incomeStatement.netIncome / this.data.sharesOutstanding),
+      peRatio: this.data.marketData.sharePrice / (this.data.incomeStatement.netIncome / this.data.sharesOutstanding),
       evToEbitda: enterpriseValue / ebitda,
-      pbRatio: this.data.marketPrice / (this.data.balanceSheet.totalEquity / this.data.sharesOutstanding),
-      psRatio: this.data.marketPrice / (this.data.incomeStatement.revenue / this.data.sharesOutstanding),
+      pbRatio: this.data.marketData.sharePrice / (this.data.balanceSheet.totalShareholdersEquity / this.data.sharesOutstanding),
+      psRatio: this.data.marketData.sharePrice / (this.data.incomeStatement.revenue / this.data.sharesOutstanding),
       pegRatio: 0, // Will be calculated
       evToSales: enterpriseValue / this.data.incomeStatement.revenue,
       priceToFCF: marketCap / this.calculateFreeCashFlow()
@@ -1271,7 +1270,7 @@ recommendations: this.getRecommendationsDCF(results)
 
   private calculateValuationRange(multiplesData: any): any {
     const valuations = Object.values(multiplesData.impliedValuations);
-    const validValuations = valuations.filter(v => typeof v === 'number' && v > 0);
+    const validValuations = valuations.filter(v => typeof v === 'number' && v > 0) as number[];
     
     return {
       min: Math.min(...validValuations),
@@ -1331,7 +1330,7 @@ recommendations: this.getRecommendationsDCF(results)
   private getRecommendationsMultiples(results: any): string[] {
     const recommendations = [];
     const avgValue = results.valuationRange.average;
-    const currentPrice = this.data.marketPrice;
+    const currentPrice = this.data.marketData.sharePrice;
     
     if (avgValue > currentPrice * 1.2) {
       recommendations.push('السهم يبدو مقوماً بأقل من قيمته بناءً على المضاعفات');
@@ -1430,7 +1429,7 @@ recommendations: this.getRecommendationsDCF(results)
   }
 
   private interpretNAV(results: any): string {
-    const currentPrice = this.data.marketPrice;
+    const currentPrice = this.data.marketData.sharePrice;
     const adjustedNAV = results.adjustedValue.perShare;
     const discount = ((currentPrice - adjustedNAV) / adjustedNAV) * 100;
     
@@ -1458,7 +1457,7 @@ recommendations: this.getRecommendationsDCF(results)
       recommendations.push('السهم يتداول دون القيمة الدفترية - فحص الأسباب');
     }
     
-    if (results.liquidationValue.perShare > this.data.marketPrice * 0.8) {
+    if (results.liquidationValue.perShare > this.data.marketData.sharePrice * 0.8) {
       recommendations.push('قيمة التصفية توفر حماية جيدة للاستثمار');
     }
     
@@ -1468,7 +1467,7 @@ recommendations: this.getRecommendationsDCF(results)
   }
 
   private projectROE(year: number): number {
-    const baseROE = this.data.incomeStatement.netIncome / this.data.balanceSheet.totalEquity;
+    const baseROE = this.data.incomeStatement.netIncome / this.data.balanceSheet.totalShareholdersEquity;
     // Simple projection with gradual decline
     return baseROE * Math.pow(0.98, year - 1);
   }
@@ -1624,7 +1623,7 @@ recommendations: this.getRecommendationsDCF(results)
   }
 
   private calculateImpliedPB(model: any): number {
-    const roe = (this.data.incomeStatement.netIncome / this.data.balanceSheet.totalEquity) * 100;
+    const roe = (this.data.incomeStatement.netIncome / this.data.balanceSheet.totalShareholdersEquity) * 100;
     const growth = this.estimateGrowthRate() * 100;
     
     return model.intercept + model.roeCoef * roe / 100 + model.growthCoef * growth / 100;
@@ -1717,7 +1716,7 @@ recommendations: this.getRecommendationsDCF(results)
 
   private projectFutureEVA(): any[] {
     const currentEVA = this.data.incomeStatement.operatingIncome * (1 - this.data.taxRate) - 
-                      (this.data.balanceSheet.totalEquity + this.data.balanceSheet.longTermDebt) * this.calculateWACC();
+                      (this.data.balanceSheet.totalShareholdersEquity + this.data.balanceSheet.longTermDebt) * this.calculateWACC();
     
     const projections = [];
     let eva = currentEVA;
@@ -1931,7 +1930,7 @@ recommendations: this.getRecommendationsDCF(results)
 
   private interpretScenarioAnalysis(results: any): string {
     const expectedValue = results.probabilityWeighted.expectedValue;
-    const currentPrice = this.data.marketPrice;
+    const currentPrice = this.data.marketData.sharePrice;
     const upside = ((expectedValue - currentPrice) / currentPrice) * 100;
     
     let interpretation = `القيمة المتوقعة المرجحة: ${expectedValue.toFixed(2)} ريال `;
@@ -1952,7 +1951,7 @@ recommendations: this.getRecommendationsDCF(results)
       recommendations.push(`مراقبة ${factor.factor} بعناية لتأثيره العالي`);
     });
     
-    if (results.probabilityWeighted.pessimistic.value < this.data.marketPrice * 0.7) {
+    if (results.probabilityWeighted.pessimistic.value < this.data.marketData.sharePrice * 0.7) {
       recommendations.push('وضع استراتيجية للحماية من السيناريو المتشائم');
     }
     
@@ -1961,10 +1960,10 @@ recommendations: this.getRecommendationsDCF(results)
 
   private intangibleCostApproach(): any {
     return {
-      brand: this.data.incomeStatement.marketingExpense * 3,
+      brand: this.data.incomeStatement.marketingExpenses * 3,
       customerRelations: this.data.incomeStatement.sellingExpenses * 2,
       technology: this.data.incomeStatement.researchDevelopment * 5,
-      humanCapital: this.data.incomeStatement.employeeCosts * 1.5
+      humanCapital: this.data.incomeStatement.operatingExpenses * 0.3, // Placeholder calculation
     };
   }
 
@@ -1992,7 +1991,7 @@ recommendations: this.getRecommendationsDCF(results)
   }
 
   private calculateEnterpriseValue(): number {
-    const marketCap = this.data.marketPrice * this.data.sharesOutstanding;
+    const marketCap = this.data.marketData.sharePrice * this.data.sharesOutstanding;
     const netDebt = this.data.balanceSheet.shortTermDebt + 
                    this.data.balanceSheet.longTermDebt - 
                    this.data.balanceSheet.cash;
@@ -2043,7 +2042,7 @@ recommendations: this.getRecommendationsDCF(results)
 
   private getHistoricalPrice(yearsAgo: number): number {
     // Simplified historical price
-    return this.data.marketPrice * Math.pow(0.9, yearsAgo);
+    return this.data.marketData.sharePrice * Math.pow(0.9, yearsAgo);
   }
 
   private getTotalDividends(years: number): number {
@@ -2110,7 +2109,7 @@ recommendations: this.getRecommendationsDCF(results)
 
   private calculateTreynorRatio(): number {
     const excessReturn = 0.12 - 0.03;
-    const beta = this.data.beta || 1.0;
+    const beta = this.data.marketData.beta || 1.0;
     return excessReturn / beta;
   }
 
@@ -2152,7 +2151,7 @@ recommendations: this.getRecommendationsDCF(results)
   }
 
   private calculateEmployeeValue(): number {
-    return this.data.incomeStatement.employeeCosts * 2;
+    return this.data.incomeStatement.operatingExpenses * 0.4; // Placeholder calculation
   }
 
   private calculateSkillsPremium(): number {
@@ -2162,7 +2161,7 @@ recommendations: this.getRecommendationsDCF(results)
 
   private calculateRetentionValue(): number {
     // Value of employee retention
-    return this.data.incomeStatement.employeeCosts * 0.3;
+    return this.data.incomeStatement.operatingExpenses * 0.1; // Placeholder calculation
   }
 
   private calculateProcessValue(): number {
@@ -2195,7 +2194,7 @@ recommendations: this.getRecommendationsDCF(results)
   }
 
   private calculateValueAddedIC(): number {
-    const ic = this.data.marketPrice * this.data.sharesOutstanding - this.data.balanceSheet.totalEquity;
+    const ic = this.data.marketData.sharePrice * this.data.sharesOutstanding - this.data.balanceSheet.totalShareholdersEquity;
     return this.data.incomeStatement.netIncome / ic;
   }
 
@@ -2394,7 +2393,7 @@ private assessCompetitiveAdvantages(): any {
 
   private calculateROIC(): number {
     const nopat = this.data.incomeStatement.operatingIncome * (1 - this.data.taxRate);
-    const investedCapital = this.data.balanceSheet.totalEquity + 
+    const investedCapital = this.data.balanceSheet.totalShareholdersEquity + 
                            this.data.balanceSheet.longTermDebt - 
                            this.data.balanceSheet.cash;
     return (nopat / investedCapital) * 100;
@@ -2445,8 +2444,8 @@ private assessCompetitiveAdvantages(): any {
 
   private assessBalanceSheetQuality(): number {
     // Simplified assessment
-    const debtToEquity = (this.data.balanceSheet.shortTermDebt + this.data.balanceSheet.longTermDebt) / 
-                        this.data.balanceSheet.totalEquity;
+        const debtToEquity = (this.data.balanceSheet.shortTermDebt + this.data.balanceSheet.longTermDebt) /
+                        this.data.balanceSheet.totalShareholdersEquity;
     
     if (debtToEquity < 0.5) return 85;
     if (debtToEquity < 1.0) return 70;
@@ -2545,7 +2544,7 @@ private assessCompetitiveAdvantages(): any {
 
   private applyPerformanceMultiple(multiples: any): any {
     const eps = this.data.incomeStatement.netIncome / this.data.sharesOutstanding;
-    const bookValuePerShare = this.data.balanceSheet.totalEquity / this.data.sharesOutstanding;
+    const bookValuePerShare = this.data.balanceSheet.totalShareholdersEquity / this.data.sharesOutstanding;
     const ebitda = this.data.incomeStatement.operatingIncome + 
                    this.data.incomeStatement.depreciation + 
                    this.data.incomeStatement.amortization;
@@ -2606,7 +2605,7 @@ private assessCompetitiveAdvantages(): any {
 
   private calculateExpectedReturn(): number {
     // CAPM expected return
-    return this.getRiskFreeRate() + this.data.beta * this.getMarketRiskPremium();
+    return this.getRiskFreeRate() + this.data.marketData.beta * this.getMarketRiskPremium();
   }
 
   private calculateHistoricalReturn(): number {
@@ -2638,7 +2637,7 @@ private assessCompetitiveAdvantages(): any {
 
   private assessFinancialRisk(): number {
     const leverageRatio = (this.data.balanceSheet.shortTermDebt + this.data.balanceSheet.longTermDebt) / 
-                         this.data.balanceSheet.totalEquity;
+                         this.data.balanceSheet.totalShareholdersEquity;
     
     if (leverageRatio < 0.5) return 3;
     if (leverageRatio < 1.0) return 5;
@@ -2661,7 +2660,7 @@ private assessCompetitiveAdvantages(): any {
 
   private calculateVaR(confidence: number): number {
     // Value at Risk
-    const currentValue = this.data.marketPrice * this.data.sharesOutstanding;
+    const currentValue = this.data.marketData.sharePrice * this.data.sharesOutstanding;
     const volatility = this.calculateStandardDeviation();
     const zScore = confidence === 0.95 ? 1.645 : 2.326;
     

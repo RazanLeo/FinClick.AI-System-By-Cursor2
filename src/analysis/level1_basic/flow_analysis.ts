@@ -1,5 +1,5 @@
 // src/analysis/level1_basic/flow_analysis.ts
-import { FinancialData, FlowAnalysisResult } from '../../types/financial';
+import { FinancialData, FlowAnalysisResult } from '@/types';
 
 /**
  * تحليلات التدفق والحركة
@@ -140,8 +140,8 @@ export class FlowAnalysis {
         workingCapitalInvestment: this.calculateWorkingCapitalInvestment()
       },
       yields: {
-        fcfYield: fcf / (this.data.marketPrice * this.data.sharesOutstanding),
-        fcfeYield: fcfe / (this.data.marketPrice * this.data.sharesOutstanding)
+        fcfYield: fcf / (this.data.marketData.sharePrice * this.data.sharesOutstanding),
+        fcfeYield: fcfe / (this.data.marketData.sharePrice * this.data.sharesOutstanding)
       },
       growth: {
         fcfGrowth: this.calculateFCFGrowth(),
@@ -320,7 +320,7 @@ export class FlowAnalysis {
       },
       returnRatios: {
         cashReturnOnAssets: ocf / this.data.balanceSheet.totalAssets,
-        cashReturnOnEquity: ocf / this.data.balanceSheet.totalEquity,
+        cashReturnOnEquity: ocf / this.data.balanceSheet.totalShareholdersEquity,
         cashReturnOnInvestedCapital: this.calculateCashROIC()
       },
       qualityRatios: {
@@ -332,7 +332,7 @@ export class FlowAnalysis {
       efficiencyRatios: {
         assetEfficiency: ocf / this.data.balanceSheet.totalAssets,
         workingCapitalEfficiency: ocf / (this.data.balanceSheet.currentAssets - this.data.balanceSheet.currentLiabilities),
-        capitalEfficiency: fcf / this.data.balanceSheet.totalEquity
+        capitalEfficiency: fcf / this.data.balanceSheet.totalShareholdersEquity
       }
     };
 
@@ -499,8 +499,7 @@ export class FlowAnalysis {
       interpretation = 'الشركة تسدد التزاماتها وتوزع أرباحاً. ';
     }
     
-    if (results.metrics.dividendCoverage
-        if (results.metrics.dividendCoverage > 2) {
+    if (results.metrics.dividendCoverage > 2) {
       interpretation += 'تغطية قوية للأرباح الموزعة من التدفقات التشغيلية.';
     } else if (results.metrics.dividendCoverage < 1) {
       interpretation += 'الأرباح الموزعة تتجاوز التدفقات التشغيلية - قد يكون غير مستدام.';
@@ -535,7 +534,7 @@ export class FlowAnalysis {
   }
 
   private calculateSustainableGrowthRate(): number {
-    const roe = this.data.incomeStatement.netIncome / this.data.balanceSheet.totalEquity;
+    const roe = this.data.incomeStatement.netIncome / this.data.balanceSheet.totalShareholdersEquity;
     const retentionRate = 1 - (this.data.cashFlowStatement.dividendsPaid / this.data.incomeStatement.netIncome);
     return roe * retentionRate;
   }
@@ -640,7 +639,7 @@ export class FlowAnalysis {
   }
 
   private calculateWACC(): number {
-    const marketCapitalization = this.data.marketPrice * this.data.sharesOutstanding;
+    const marketCapitalization = this.data.marketData.sharePrice * this.data.sharesOutstanding;
     const totalDebt = this.data.balanceSheet.shortTermDebt + this.data.balanceSheet.longTermDebt;
     const totalValue = marketCapitalization + totalDebt;
     
@@ -656,7 +655,7 @@ export class FlowAnalysis {
     // Using CAPM: Rf + Beta * (Rm - Rf)
     const riskFreeRate = 0.03;
     const marketRiskPremium = 0.08;
-    const beta = this.data.beta || 1.0;
+    const beta = this.data.marketData.beta || 1.0;
     
     return riskFreeRate + beta * marketRiskPremium;
   }
@@ -714,7 +713,7 @@ export class FlowAnalysis {
   }
 
   private interpretDCF(results: any): string {
-    const currentPrice = this.data.marketPrice;
+    const currentPrice = this.data.marketData.sharePrice;
     const impliedPrice = results.impliedSharePrice;
     const upside = ((impliedPrice - currentPrice) / currentPrice) * 100;
     
@@ -723,7 +722,7 @@ export class FlowAnalysis {
 
   private getRecommendationsDCF(results: any): string[] {
     const recommendations = [];
-    const upside = ((results.impliedSharePrice - this.data.marketPrice) / this.data.marketPrice) * 100;
+    const upside = ((results.impliedSharePrice - this.data.marketData.sharePrice) / this.data.marketData.sharePrice) * 100;
     
     if (upside > 20) {
       recommendations.push('السهم مقوم بأقل من قيمته العادلة - فرصة شراء محتملة');
@@ -880,7 +879,7 @@ export class FlowAnalysis {
 
   private calculateCashROIC(): number {
     const nopat = this.data.incomeStatement.operatingIncome * (1 - this.data.taxRate);
-    const investedCapital = this.data.balanceSheet.totalEquity + 
+    const investedCapital = this.data.balanceSheet.totalShareholdersEquity + 
                            this.data.balanceSheet.longTermDebt;
     const ocf = this.data.cashFlowStatement.operatingCashFlow;
     

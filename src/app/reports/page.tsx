@@ -100,13 +100,11 @@ import {
   BookmarkPlus,
   BookmarkMinus,
   BookmarkX,
-  BookmarkCheck,
   BookmarkStar,
   BookmarkHeart,
   BookmarkPlus2,
   BookmarkMinus2,
   BookmarkX2,
-  BookmarkCheck2,
   BookmarkStar2,
   BookmarkHeart2
 } from 'lucide-react';
@@ -471,7 +469,7 @@ export default function ReportsPage() {
                       </button>
                       <button className="p-1 rounded hover:bg-finclick-gold/10 transition-all duration-300">
                         {report.isBookmarked ? (
-                          <BookmarkCheck className="w-4 h-4 text-finclick-gold" />
+                          <Bookmark className="w-4 h-4 text-finclick-gold" />
                         ) : (
                           <BookmarkPlus className="w-4 h-4 text-finclick-gold" />
                         )}
@@ -597,7 +595,7 @@ export default function ReportsPage() {
               </p>
             </div>
             <div className="bg-white/90 backdrop-blur-sm border border-finclick-gold/20 rounded-xl p-6 shadow-lg text-center">
-              <BookmarkCheck className="w-8 h-8 text-finclick-warning mx-auto mb-2" />
+                              <Bookmark className="w-8 h-8 text-finclick-warning mx-auto mb-2" />
               <h3 className="text-2xl font-bold text-finclick-gold font-playfair">
                 {reports.filter(r => r.isBookmarked).length}
               </h3>

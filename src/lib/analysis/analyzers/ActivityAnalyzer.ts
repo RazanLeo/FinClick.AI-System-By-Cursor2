@@ -1,7 +1,7 @@
 import { AnalysisResult, FinancialStatement, Company } from '@/lib/types';
 import { BaseAnalyzer } from './BaseAnalyzer';
 
-export class EfficiencyAnalyzer extends BaseAnalyzer {
+export class ActivityAnalyzer extends BaseAnalyzer {
   async analyze(financialData: FinancialStatement[], companyData: Company, marketData?: any, benchmarkData?: any): Promise<AnalysisResult[]> {
     const latestStatement = financialData[financialData.length - 1];
     const results: AnalysisResult[] = [];
@@ -13,64 +13,49 @@ export class EfficiencyAnalyzer extends BaseAnalyzer {
       // 2. معدل دوران الذمم المدينة
       results.push(this.calculateReceivablesTurnover(latestStatement, benchmarkData));
       
-      // 3. فترة تحصيل الذمم المدينة
-      results.push(this.calculateDaysSalesOutstanding(latestStatement, benchmarkData));
-      
-      // 4. معدل دوران الذمم الدائنة
+      // 3. معدل دوران الذمم الدائنة
       results.push(this.calculatePayablesTurnover(latestStatement, benchmarkData));
       
-      // 5. فترة سداد الذمم الدائنة
-      results.push(this.calculateDaysPayableOutstanding(latestStatement, benchmarkData));
-      
-      // 6. معدل دوران الأصول الثابتة
+      // 4. معدل دوران الأصول الثابتة
       results.push(this.calculateFixedAssetTurnover(latestStatement, benchmarkData));
       
-      // 7. معدل دوران إجمالي الأصول
+      // 5. معدل دوران إجمالي الأصول
       results.push(this.calculateTotalAssetTurnover(latestStatement, benchmarkData));
       
-      // 8. دورة التشغيل
-      results.push(this.calculateOperatingCycle(latestStatement, benchmarkData));
-      
-      // 9. دورة التحويل النقدي
-      results.push(this.calculateCashConversionCycle(latestStatement, benchmarkData));
-      
-      // 10. معدل دوران رأس المال العامل
+      // 6. معدل دوران رأس المال العامل
       results.push(this.calculateWorkingCapitalTurnover(latestStatement, benchmarkData));
       
-      // 11. معدل دوران حقوق الملكية
+      // 7. معدل دوران حقوق الملكية
       results.push(this.calculateEquityTurnover(latestStatement, benchmarkData));
       
-      // 12. معدل دوران الأصول المتداولة
+      // 8. معدل دوران الأصول المتداولة
       results.push(this.calculateCurrentAssetTurnover(latestStatement, benchmarkData));
       
-      // 13. معدل دوران الأصول غير المتداولة
+      // 9. معدل دوران الأصول غير المتداولة
       results.push(this.calculateNonCurrentAssetTurnover(latestStatement, benchmarkData));
       
-      // 14. معدل دوران الأصول الملموسة
+      // 10. معدل دوران الأصول الملموسة
       results.push(this.calculateTangibleAssetTurnover(latestStatement, benchmarkData));
       
-      // 15. معدل دوران الأصول غير الملموسة
+      // 11. معدل دوران الأصول غير الملموسة
       results.push(this.calculateIntangibleAssetTurnover(latestStatement, benchmarkData));
       
-      // 16. معدل دوران الأصول الاستثمارية
+      // 12. معدل دوران الأصول الاستثمارية
       results.push(this.calculateInvestmentAssetTurnover(latestStatement, benchmarkData));
       
-      // 17. معدل دوران الأصول المالية
+      // 13. معدل دوران الأصول المالية
       results.push(this.calculateFinancialAssetTurnover(latestStatement, benchmarkData));
       
-      // 18. معدل دوران الأصول التشغيلية
+      // 14. معدل دوران الأصول التشغيلية
       results.push(this.calculateOperatingAssetTurnover(latestStatement, benchmarkData));
       
-      // 19. معدل دوران الأصول الصافية
+      // 15. معدل دوران الأصول الصافية
       results.push(this.calculateNetAssetTurnover(latestStatement, benchmarkData));
-      
-      // 20. معدل دوران الأصول المتاحة
-      results.push(this.calculateAvailableAssetTurnover(latestStatement, benchmarkData));
 
       return results;
     } catch (error) {
-      console.error('Efficiency Analysis Error:', error);
-      return [this.createErrorResult('efficiency-error', 'خطأ في تحليل الكفاءة')];
+      console.error('Activity Analysis Error:', error);
+      return [this.createErrorResult('activity-error', 'خطأ في تحليل النشاط')];
     }
   }
 
@@ -88,7 +73,7 @@ export class EfficiencyAnalyzer extends BaseAnalyzer {
     return {
       id: 'inventory-turnover',
       name: 'معدل دوران المخزون',
-      category: 'efficiency',
+      category: 'activity',
       type: 'ratio',
       currentValue: inventoryTurnover,
       rating: this.rateInventoryTurnover(inventoryTurnover),
@@ -134,7 +119,7 @@ export class EfficiencyAnalyzer extends BaseAnalyzer {
     return {
       id: 'receivables-turnover',
       name: 'معدل دوران الذمم المدينة',
-      category: 'efficiency',
+      category: 'activity',
       type: 'ratio',
       currentValue: receivablesTurnover,
       rating: this.rateReceivablesTurnover(receivablesTurnover),
@@ -166,51 +151,6 @@ export class EfficiencyAnalyzer extends BaseAnalyzer {
     };
   }
 
-  private calculateDaysSalesOutstanding(statement: FinancialStatement, benchmarkData?: any): AnalysisResult {
-    const revenue = statement.incomeStatement.revenue || 0;
-    const averageReceivables = statement.balanceSheet.accountsReceivable || 0;
-    
-    if (revenue === 0) {
-      return this.createErrorResult('days-sales-outstanding', 'فترة تحصيل الذمم المدينة');
-    }
-
-    const daysSalesOutstanding = (averageReceivables / revenue) * 365;
-
-    return {
-      id: 'days-sales-outstanding',
-      name: 'فترة تحصيل الذمم المدينة',
-      category: 'efficiency',
-      type: 'days',
-      currentValue: daysSalesOutstanding,
-      rating: this.rateDaysSalesOutstanding(daysSalesOutstanding),
-      interpretation: `فترة تحصيل الذمم المدينة ${daysSalesOutstanding.toFixed(0)} يوم تعني أن الشركة تحتاج ${daysSalesOutstanding.toFixed(0)} يوم في المتوسط لتحصيل المبيعات الآجلة`,
-      calculation: {
-        formula: '(متوسط الذمم المدينة ÷ الإيرادات) × 365',
-        variables: {
-          'متوسط الذمم المدينة': averageReceivables,
-          'الإيرادات': revenue,
-          'الفترة بالأيام': daysSalesOutstanding
-        }
-      },
-      insights: [
-        daysSalesOutstanding < 30 ? 'تحصيل ممتاز يدل على كفاءة عالية في إدارة الذمم المدينة' : '',
-        daysSalesOutstanding > 90 ? 'تحصيل بطيء قد يشير لمشاكل في إدارة الائتمان' : '',
-        daysSalesOutstanding > 120 ? 'تحصيل بطيء جداً يتطلب مراجعة فورية' : ''
-      ].filter(Boolean),
-      recommendations: [
-        daysSalesOutstanding > 60 ? 'تحسين سياسات التحصيل وتقليل فترة التحصيل' : '',
-        daysSalesOutstanding < 20 ? 'مراجعة سياسة الائتمان للتأكد من عدم فقدان العملاء' : '',
-        'مراقبة اتجاهات فترة التحصيل عبر الزمن'
-      ].filter(Boolean),
-      industryBenchmark: benchmarkData?.daysSalesOutstanding ? {
-        value: benchmarkData.daysSalesOutstanding.average,
-        source: 'معايير الصناعة',
-        period: 'السنة الحالية'
-      } : undefined,
-      status: 'completed'
-    };
-  }
-
   private calculatePayablesTurnover(statement: FinancialStatement, benchmarkData?: any): AnalysisResult {
     const costOfGoodsSold = statement.incomeStatement.costOfGoodsSold || 0;
     const averagePayables = statement.balanceSheet.accountsPayable || 0;
@@ -225,7 +165,7 @@ export class EfficiencyAnalyzer extends BaseAnalyzer {
     return {
       id: 'payables-turnover',
       name: 'معدل دوران الذمم الدائنة',
-      category: 'efficiency',
+      category: 'activity',
       type: 'ratio',
       currentValue: payablesTurnover,
       rating: this.ratePayablesTurnover(payablesTurnover),
@@ -257,51 +197,6 @@ export class EfficiencyAnalyzer extends BaseAnalyzer {
     };
   }
 
-  private calculateDaysPayableOutstanding(statement: FinancialStatement, benchmarkData?: any): AnalysisResult {
-    const costOfGoodsSold = statement.incomeStatement.costOfGoodsSold || 0;
-    const averagePayables = statement.balanceSheet.accountsPayable || 0;
-    
-    if (costOfGoodsSold === 0) {
-      return this.createErrorResult('days-payable-outstanding', 'فترة سداد الذمم الدائنة');
-    }
-
-    const daysPayableOutstanding = (averagePayables / costOfGoodsSold) * 365;
-
-    return {
-      id: 'days-payable-outstanding',
-      name: 'فترة سداد الذمم الدائنة',
-      category: 'efficiency',
-      type: 'days',
-      currentValue: daysPayableOutstanding,
-      rating: this.rateDaysPayableOutstanding(daysPayableOutstanding),
-      interpretation: `فترة سداد الذمم الدائنة ${daysPayableOutstanding.toFixed(0)} يوم تعني أن الشركة تحتاج ${daysPayableOutstanding.toFixed(0)} يوم في المتوسط لسداد المدفوعات للموردين`,
-      calculation: {
-        formula: '(متوسط الذمم الدائنة ÷ تكلفة البضاعة المباعة) × 365',
-        variables: {
-          'متوسط الذمم الدائنة': averagePayables,
-          'تكلفة البضاعة المباعة': costOfGoodsSold,
-          'الفترة بالأيام': daysPayableOutstanding
-        }
-      },
-      insights: [
-        daysPayableOutstanding < 30 ? 'سداد سريع يدل على كفاءة عالية في إدارة المدفوعات' : '',
-        daysPayableOutstanding > 90 ? 'سداد بطيء قد يشير لمشاكل في السيولة' : '',
-        daysPayableOutstanding > 120 ? 'سداد بطيء جداً يتطلب مراجعة فورية' : ''
-      ].filter(Boolean),
-      recommendations: [
-        daysPayableOutstanding > 60 ? 'تحسين إدارة المدفوعات وتقليل فترة السداد' : '',
-        daysPayableOutstanding < 20 ? 'مراجعة سياسة الدفع للتأكد من عدم فقدان الموردين' : '',
-        'مراقبة اتجاهات فترة السداد عبر الزمن'
-      ].filter(Boolean),
-      industryBenchmark: benchmarkData?.daysPayableOutstanding ? {
-        value: benchmarkData.daysPayableOutstanding.average,
-        source: 'معايير الصناعة',
-        period: 'السنة الحالية'
-      } : undefined,
-      status: 'completed'
-    };
-  }
-
   private calculateFixedAssetTurnover(statement: FinancialStatement, benchmarkData?: any): AnalysisResult {
     const revenue = statement.incomeStatement.revenue || 0;
     const fixedAssets = statement.balanceSheet.fixedAssets || 0;
@@ -315,7 +210,7 @@ export class EfficiencyAnalyzer extends BaseAnalyzer {
     return {
       id: 'fixed-asset-turnover',
       name: 'معدل دوران الأصول الثابتة',
-      category: 'efficiency',
+      category: 'activity',
       type: 'ratio',
       currentValue: fixedAssetTurnover,
       rating: this.rateFixedAssetTurnover(fixedAssetTurnover),
@@ -359,7 +254,7 @@ export class EfficiencyAnalyzer extends BaseAnalyzer {
     return {
       id: 'total-asset-turnover',
       name: 'معدل دوران إجمالي الأصول',
-      category: 'efficiency',
+      category: 'activity',
       type: 'ratio',
       currentValue: totalAssetTurnover,
       rating: this.rateTotalAssetTurnover(totalAssetTurnover),
@@ -390,107 +285,6 @@ export class EfficiencyAnalyzer extends BaseAnalyzer {
     };
   }
 
-  private calculateOperatingCycle(statement: FinancialStatement, benchmarkData?: any): AnalysisResult {
-    const revenue = statement.incomeStatement.revenue || 0;
-    const costOfGoodsSold = statement.incomeStatement.costOfGoodsSold || 0;
-    const averageInventory = statement.balanceSheet.inventory || 0;
-    const averageReceivables = statement.balanceSheet.accountsReceivable || 0;
-    
-    if (revenue === 0 || costOfGoodsSold === 0) {
-      return this.createErrorResult('operating-cycle', 'دورة التشغيل');
-    }
-
-    const daysInInventory = (averageInventory / costOfGoodsSold) * 365;
-    const daysSalesOutstanding = (averageReceivables / revenue) * 365;
-    const operatingCycle = daysInInventory + daysSalesOutstanding;
-
-    return {
-      id: 'operating-cycle',
-      name: 'دورة التشغيل',
-      category: 'efficiency',
-      type: 'days',
-      currentValue: operatingCycle,
-      rating: this.rateOperatingCycle(operatingCycle),
-      interpretation: `دورة التشغيل ${operatingCycle.toFixed(0)} يوم تعني أن الشركة تحتاج ${operatingCycle.toFixed(0)} يوم لإكمال دورة التشغيل من شراء المخزون إلى تحصيل المبيعات`,
-      calculation: {
-        formula: 'أيام المخزون + أيام التحصيل',
-        variables: {
-          'أيام المخزون': daysInInventory,
-          'أيام التحصيل': daysSalesOutstanding,
-          'دورة التشغيل': operatingCycle
-        }
-      },
-      insights: [
-        operatingCycle < 60 ? 'دورة تشغيل ممتازة تدل على كفاءة عالية' : '',
-        operatingCycle > 180 ? 'دورة تشغيل طويلة قد تشير لمشاكل في الإدارة' : '',
-        operatingCycle > 365 ? 'دورة تشغيل طويلة جداً تتطلب مراجعة فورية' : ''
-      ].filter(Boolean),
-      recommendations: [
-        operatingCycle > 120 ? 'تحسين إدارة المخزون والتحصيل لتقليل دورة التشغيل' : '',
-        operatingCycle < 40 ? 'التأكد من عدم فقدان العملاء بسبب السياسات الصارمة' : '',
-        'مراقبة اتجاهات دورة التشغيل عبر الزمن'
-      ].filter(Boolean),
-      industryBenchmark: benchmarkData?.operatingCycle ? {
-        value: benchmarkData.operatingCycle.average,
-        source: 'معايير الصناعة',
-        period: 'السنة الحالية'
-      } : undefined,
-      status: 'completed'
-    };
-  }
-
-  private calculateCashConversionCycle(statement: FinancialStatement, benchmarkData?: any): AnalysisResult {
-    const revenue = statement.incomeStatement.revenue || 0;
-    const costOfGoodsSold = statement.incomeStatement.costOfGoodsSold || 0;
-    const averageInventory = statement.balanceSheet.inventory || 0;
-    const averageReceivables = statement.balanceSheet.accountsReceivable || 0;
-    const averagePayables = statement.balanceSheet.accountsPayable || 0;
-    
-    if (revenue === 0 || costOfGoodsSold === 0) {
-      return this.createErrorResult('cash-conversion-cycle', 'دورة التحويل النقدي');
-    }
-
-    const daysInInventory = (averageInventory / costOfGoodsSold) * 365;
-    const daysSalesOutstanding = (averageReceivables / revenue) * 365;
-    const daysPayableOutstanding = (averagePayables / costOfGoodsSold) * 365;
-    const cashConversionCycle = daysInInventory + daysSalesOutstanding - daysPayableOutstanding;
-
-    return {
-      id: 'cash-conversion-cycle',
-      name: 'دورة التحويل النقدي',
-      category: 'efficiency',
-      type: 'days',
-      currentValue: cashConversionCycle,
-      rating: this.rateCashConversionCycle(cashConversionCycle),
-      interpretation: `دورة التحويل النقدي ${cashConversionCycle.toFixed(0)} يوم تعني أن الشركة تحتاج ${cashConversionCycle.toFixed(0)} يوم لتحويل الاستثمارات النقدية إلى تدفق نقدي`,
-      calculation: {
-        formula: 'أيام المخزون + أيام التحصيل - أيام السداد',
-        variables: {
-          'أيام المخزون': daysInInventory,
-          'أيام التحصيل': daysSalesOutstanding,
-          'أيام السداد': daysPayableOutstanding,
-          'دورة التحويل النقدي': cashConversionCycle
-        }
-      },
-      insights: [
-        cashConversionCycle < 30 ? 'دورة تحويل نقدي ممتازة تدل على كفاءة عالية' : '',
-        cashConversionCycle > 120 ? 'دورة تحويل نقدي طويلة قد تشير لمشاكل في السيولة' : '',
-        cashConversionCycle < 0 ? 'دورة تحويل نقدي سلبية تعني تمويل من الموردين' : ''
-      ].filter(Boolean),
-      recommendations: [
-        cashConversionCycle > 90 ? 'تحسين إدارة المخزون والتحصيل لتقليل دورة التحويل النقدي' : '',
-        cashConversionCycle < 0 ? 'الاستفادة من التمويل من الموردين' : '',
-        'مراقبة اتجاهات دورة التحويل النقدي عبر الزمن'
-      ].filter(Boolean),
-      industryBenchmark: benchmarkData?.cashConversionCycle ? {
-        value: benchmarkData.cashConversionCycle.average,
-        source: 'معايير الصناعة',
-        period: 'السنة الحالية'
-      } : undefined,
-      status: 'completed'
-    };
-  }
-
   // Helper methods for rating
   private rateInventoryTurnover(turnover: number): 'excellent' | 'good' | 'average' | 'poor' {
     if (turnover >= 6) return 'excellent';
@@ -506,24 +300,10 @@ export class EfficiencyAnalyzer extends BaseAnalyzer {
     return 'poor';
   }
 
-  private rateDaysSalesOutstanding(days: number): 'excellent' | 'good' | 'average' | 'poor' {
-    if (days <= 30) return 'excellent';
-    if (days <= 45) return 'good';
-    if (days <= 60) return 'average';
-    return 'poor';
-  }
-
   private ratePayablesTurnover(turnover: number): 'excellent' | 'good' | 'average' | 'poor' {
     if (turnover >= 6) return 'excellent';
     if (turnover >= 4) return 'good';
     if (turnover >= 3) return 'average';
-    return 'poor';
-  }
-
-  private rateDaysPayableOutstanding(days: number): 'excellent' | 'good' | 'average' | 'poor' {
-    if (days <= 30) return 'excellent';
-    if (days <= 45) return 'good';
-    if (days <= 60) return 'average';
     return 'poor';
   }
 
@@ -541,21 +321,7 @@ export class EfficiencyAnalyzer extends BaseAnalyzer {
     return 'poor';
   }
 
-  private rateOperatingCycle(days: number): 'excellent' | 'good' | 'average' | 'poor' {
-    if (days <= 60) return 'excellent';
-    if (days <= 90) return 'good';
-    if (days <= 120) return 'average';
-    return 'poor';
-  }
-
-  private rateCashConversionCycle(days: number): 'excellent' | 'good' | 'average' | 'poor' {
-    if (days <= 30) return 'excellent';
-    if (days <= 60) return 'good';
-    if (days <= 90) return 'average';
-    return 'poor';
-  }
-
-  // باقي التحليلات الـ 11 المتبقية...
+  // باقي التحليلات الـ 10 المتبقية...
   private calculateWorkingCapitalTurnover(statement: FinancialStatement, benchmarkData?: any): AnalysisResult {
     return this.createErrorResult('working-capital-turnover', 'معدل دوران رأس المال العامل');
   }
@@ -594,9 +360,5 @@ export class EfficiencyAnalyzer extends BaseAnalyzer {
 
   private calculateNetAssetTurnover(statement: FinancialStatement, benchmarkData?: any): AnalysisResult {
     return this.createErrorResult('net-asset-turnover', 'معدل دوران الأصول الصافية');
-  }
-
-  private calculateAvailableAssetTurnover(statement: FinancialStatement, benchmarkData?: any): AnalysisResult {
-    return this.createErrorResult('available-asset-turnover', 'معدل دوران الأصول المتاحة');
   }
 }

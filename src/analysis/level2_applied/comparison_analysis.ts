@@ -1,5 +1,5 @@
 // src/analysis/level2_applied/comparison_analysis.ts
-import { FinancialData, ComparisonAnalysisResult } from '../../types/financial';
+import { FinancialData, ComparisonAnalysisResult } from '@/types';
 
 /**
  * تحليلات المقارنة المتقدمة
@@ -224,8 +224,6 @@ export class ComparisonAnalysis {
         growthShare: this.calculateGrowthShare()
       },
       competitiveGaps: {
-        costStructure: this.analyzeC
-        competitiveGaps: {
         costStructure: this.analyzeCostGap(companyPosition, marketLeader),
         operationalEfficiency: this.analyzeEfficiencyGap(companyPosition, marketLeader),
         financialStrength: this.analyzeFinancialGap(companyPosition, marketLeader),
@@ -236,8 +234,7 @@ export class ComparisonAnalysis {
         geographicReach: this.analyzeGeographicGap(),
         customerBase: this.analyzeCustomerGap(),
         technologyAdoption: this.analyzeTechnologyGap()
-      },
-      closingStrategies: this.developGapClosingStrategies(results)
+      }
     };
 
     return {
@@ -335,10 +332,10 @@ export class ComparisonAnalysis {
     
     const results = {
       regionalPerformance: geographicData.map(region => ({
-        region: region.name,
+        region: region.region,
         revenue: region.revenue,
         revenueShare: (region.revenue / this.data.incomeStatement.revenue) * 100,
-        profitability: region.operatingMargin,
+        profitability: (region.operatingIncome / region.revenue) * 100,
         growth: region.growthRate,
         marketShare: region.marketShare
       })),
@@ -377,11 +374,11 @@ export class ComparisonAnalysis {
     
     const results = {
       sectorPerformance: sectorData.map(sector => ({
-        sectorName: sector.name,
+        sectorName: sector.sector,
         metrics: {
           revenue: sector.revenue,
           revenueShare: (sector.revenue / this.data.incomeStatement.revenue) * 100,
-          operatingMargin: sector.operatingMargin,
+          operatingMargin: (sector.operatingIncome / sector.revenue) * 100,
           assetTurnover: sector.revenue / sector.assets,
           roi: sector.operatingIncome / sector.assets
         },
@@ -501,7 +498,7 @@ export class ComparisonAnalysis {
       grossMargin: (this.data.incomeStatement.grossProfit / this.data.incomeStatement.revenue) * 100,
       operatingMargin: (this.data.incomeStatement.operatingIncome / this.data.incomeStatement.revenue) * 100,
       netMargin: (this.data.incomeStatement.netIncome / this.data.incomeStatement.revenue) * 100,
-      roe: (this.data.incomeStatement.netIncome / this.data.balanceSheet.totalEquity) * 100,
+      roe: (this.data.incomeStatement.netIncome / this.data.balanceSheet.totalShareholdersEquity) * 100,
       roa: (this.data.incomeStatement.netIncome / this.data.balanceSheet.totalAssets) * 100,
       
       // Efficiency
@@ -514,12 +511,12 @@ export class ComparisonAnalysis {
       quickRatio: (this.data.balanceSheet.currentAssets - this.data.balanceSheet.inventory) / this.data.balanceSheet.currentLiabilities,
       
       // Leverage
-      debtToEquity: (this.data.balanceSheet.shortTermDebt + this.data.balanceSheet.longTermDebt) / this.data.balanceSheet.totalEquity,
+      debtToEquity: (this.data.balanceSheet.shortTermDebt + this.data.balanceSheet.longTermDebt) / this.data.balanceSheet.totalShareholdersEquity,
       interestCoverage: this.data.incomeStatement.operatingIncome / this.data.incomeStatement.interestExpense,
       
       // Valuation
-      peRatio: this.data.marketPrice / (this.data.incomeStatement.netIncome / this.data.sharesOutstanding),
-      pbRatio: this.data.marketPrice / (this.data.balanceSheet.totalEquity / this.data.sharesOutstanding)
+      peRatio: this.data.marketData.sharePrice / (this.data.incomeStatement.netIncome / this.data.sharesOutstanding),
+      pbRatio: this.data.marketData.sharePrice / (this.data.balanceSheet.totalShareholdersEquity / this.data.sharesOutstanding)
     };
   }
 
@@ -628,7 +625,7 @@ export class ComparisonAnalysis {
 
   private assessCompetitivePosition(companyMetrics: any, peerMetrics: any[]): string {
     const rankings = this.calculatePeerRanking(companyMetrics, peerMetrics);
-    const avgRank = Object.values(rankings).reduce((sum: number, rank: any) => sum + rank, 0) / Object.keys(rankings).length;
+    const avgRank = (Object.values(rankings) as number[]).reduce((sum: number, rank: number) => sum + rank, 0) / Object.keys(rankings).length;
     
     if (avgRank <= 2) return 'مركز قيادي في السوق';
     if (avgRank <= 4) return 'مركز تنافسي قوي';
@@ -830,13 +827,13 @@ export class ComparisonAnalysis {
   private assessFinancialMaturity(metrics: any, benchmarks: any): number {
     // Scale 1-5
     const position = this.calculateQuartilePosition(metrics);
-    const avgQuartile = Object.values(position.profitability).reduce((sum: number, q: any) => sum + q, 0) / Object.keys(position.profitability).length;
+    const avgQuartile = (Object.values(position.profitability) as number[]).reduce((sum: number, q: number) => sum + q, 0) / Object.keys(position.profitability).length;
     return 6 - avgQuartile; // Convert quartile to maturity scale
   }
 
   private assessOperationalMaturity(metrics: any, benchmarks: any): number {
     const position = this.calculateQuartilePosition(metrics);
-    const avgQuartile = Object.values(position.efficiency).reduce((sum: number, q: any) => sum + q, 0) / Object.keys(position.efficiency).length;
+    const avgQuartile = (Object.values(position.efficiency) as number[]).reduce((sum: number, q: number) => sum + q, 0) / Object.keys(position.efficiency).length;
     return 6 - avgQuartile;
   }
 
@@ -1255,7 +1252,7 @@ export class ComparisonAnalysis {
 
   private calculateGeographicConcentration(): number {
     // Herfindahl index
-    const shares = this.data.geographicSegments.map(s => s.revenueShare);
+    const shares = this.data.geographicSegments.map(s => (s.revenue / this.data.incomeStatement.revenue) * 100);
     return shares.reduce((sum, share) => sum + Math.pow(share, 2), 0);
   }
 

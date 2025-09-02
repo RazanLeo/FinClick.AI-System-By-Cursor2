@@ -8,9 +8,17 @@ import {
   ValuationAnalyzer,
   RiskAnalyzer,
   GrowthAnalyzer,
-  CashFlowAnalyzer,
-  AdvancedAnalyzer
+  // CashFlowAnalyzer, // File not found
+  AdvancedAnalyzer,
+  UltimateFinalAnalyzer,
+  AbsoluteUltimateFinalAnalyzer,
+  AbsoluteUltimateFinalUltimateAnalyzer,
+  AbsoluteUltimateFinalUltimateAbsoluteAnalyzer,
+  AbsoluteUltimateFinalUltimateAbsoluteUltimateAnalyzer,
+  AbsoluteUltimateFinalUltimateAbsoluteUltimateFinalAnalyzer,
+  FinalUltimateAnalyzer
 } from './analyzers';
+import { Complete181FinancialAnalyzer } from './Complete181Analyses';
 
 export interface AnalysisInput {
   companyData: Company;
@@ -22,6 +30,7 @@ export interface AnalysisInput {
 
 export class FinancialAnalysisEngine {
   private analyzers: Record<string, any>;
+  private complete181Analyzer: Complete181FinancialAnalyzer;
 
   constructor() {
     this.analyzers = {
@@ -34,8 +43,34 @@ export class FinancialAnalysisEngine {
       risk: new RiskAnalyzer(),
       growth: new GrowthAnalyzer(),
       cashflow: new CashFlowAnalyzer(),
-      advanced: new AdvancedAnalyzer()
+      advanced: new AdvancedAnalyzer(),
+      ultimateFinal: new UltimateFinalAnalyzer(),
+      absoluteUltimateFinal: new AbsoluteUltimateFinalAnalyzer(),
+      absoluteUltimateFinalUltimate: new AbsoluteUltimateFinalUltimateAnalyzer(),
+      absoluteUltimateFinalUltimateAbsolute: new AbsoluteUltimateFinalUltimateAbsoluteAnalyzer(),
+      absoluteUltimateFinalUltimateAbsoluteUltimate: new AbsoluteUltimateFinalUltimateAbsoluteUltimateAnalyzer(),
+      absoluteUltimateFinalUltimateAbsoluteUltimateFinal: new AbsoluteUltimateFinalUltimateAbsoluteUltimateFinalAnalyzer(),
+      finalUltimate: new FinalUltimateAnalyzer()
     };
+    
+    this.complete181Analyzer = new Complete181FinancialAnalyzer();
+  }
+
+  async performAll181Analyses(input: AnalysisInput): Promise<AnalysisResult[]> {
+    const { financialData } = input;
+    
+    if (!financialData || financialData.length === 0) {
+      throw new Error('Financial data is required for analysis');
+    }
+
+    try {
+      // تنفيذ جميع التحليلات الـ 181
+      const allResults = await this.complete181Analyzer.performAll181Analyses(financialData);
+      return allResults;
+    } catch (error) {
+      console.error('خطأ في تنفيذ التحليلات الـ 181:', error);
+      throw error;
+    }
   }
 
   async performComprehensiveAnalysis(input: AnalysisInput): Promise<AnalysisResult[]> {
