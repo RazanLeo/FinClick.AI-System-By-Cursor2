@@ -36,7 +36,7 @@ export class Complete181Analyses {
    */
   async performAllAnalyses(statements: FinancialStatement[]): Promise<AnalysisResult[]> {
     const results: AnalysisResult[] = [];
-
+    
     // 1. التحليلات الأساسية الكلاسيكية (55 تحليل)
     results.push(...await this.performClassicalFoundationalAnalyses(statements));
 
@@ -45,7 +45,7 @@ export class Complete181Analyses {
 
     // 3. التحليلات المتقدمة والمتطورة (88 تحليل)
     results.push(...await this.performAdvancedDevelopedAnalyses(statements));
-
+    
     return results;
   }
 
@@ -54,7 +54,7 @@ export class Complete181Analyses {
    */
   private async performClassicalFoundationalAnalyses(statements: FinancialStatement[]): Promise<AnalysisResult[]> {
     const results: AnalysisResult[] = [];
-
+    
     // 1. التحليل الهيكلي للقوائم المالية (15 تحليل)
     results.push(...await this.performStructuralAnalysis(statements));
 
@@ -181,7 +181,7 @@ export class Complete181Analyses {
    */
   async generateExecutiveSummary(statements: FinancialStatement[]): Promise<AnalysisResult> {
     const allAnalyses = await this.performAllAnalyses(statements);
-    
+
     return {
       id: 'executive-summary',
       name: 'الملخص التنفيذي الشامل',
