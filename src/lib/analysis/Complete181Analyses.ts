@@ -887,7 +887,1258 @@ export class Complete181FinancialAnalyzer {
     return this.createErrorResult('index-numbers', 'تحليل الأرقام القياسية');
   }
 
+  // Missing method implementations for liquidity ratios
+  private async calculateActivityEfficiencyRatios(statement: FinancialStatement): Promise<AnalysisResult[]> {
+    const results: AnalysisResult[] = [];
+    
+    // 1) معدل دوران المخزون
+    const inventoryTurnover = (statement.incomeStatement.costOfGoodsSold || 0) / (statement.balanceSheet.inventory || 1);
+    results.push({
+      id: 'inventory-turnover',
+      name: 'معدل دوران المخزون',
+      category: 'activity',
+      type: 'ratio',
+      currentValue: inventoryTurnover,
+      rating: this.rateInventoryTurnover(inventoryTurnover),
+      interpretation: `معدل دوران المخزون ${inventoryTurnover.toFixed(2)} يشير إلى ${this.interpretInventoryTurnover(inventoryTurnover)}`,
+      calculation: {
+        formula: 'تكلفة البضاعة المباعة ÷ متوسط المخزون',
+        variables: {
+          'تكلفة البضاعة المباعة': statement.incomeStatement.costOfGoodsSold || 0,
+          'متوسط المخزون': statement.balanceSheet.inventory || 0
+        }
+      },
+      benchmarkComparison: this.getBenchmarkComparison('inventory-turnover', inventoryTurnover),
+      competitorAnalysis: this.getCompetitorAnalysis('inventory-turnover', inventoryTurnover),
+      competitivePosition: this.getCompetitivePosition(inventoryTurnover, 'inventory-turnover'),
+      recommendations: this.getInventoryTurnoverRecommendations(inventoryTurnover),
+      status: 'completed'
+    });
+
+    // 2) معدل دوران الذمم المدينة
+    const receivablesTurnover = (statement.incomeStatement.revenue || 0) / (statement.balanceSheet.accountsReceivable || 1);
+    results.push({
+      id: 'receivables-turnover',
+      name: 'معدل دوران الذمم المدينة',
+      category: 'activity',
+      type: 'ratio',
+      currentValue: receivablesTurnover,
+      rating: this.rateReceivablesTurnover(receivablesTurnover),
+      interpretation: `معدل دوران الذمم المدينة ${receivablesTurnover.toFixed(2)} يشير إلى ${this.interpretReceivablesTurnover(receivablesTurnover)}`,
+      calculation: {
+        formula: 'صافي المبيعات ÷ متوسط الذمم المدينة',
+        variables: {
+          'صافي المبيعات': statement.incomeStatement.revenue || 0,
+          'متوسط الذمم المدينة': statement.balanceSheet.accountsReceivable || 0
+        }
+      },
+      benchmarkComparison: this.getBenchmarkComparison('receivables-turnover', receivablesTurnover),
+      competitorAnalysis: this.getCompetitorAnalysis('receivables-turnover', receivablesTurnover),
+      competitivePosition: this.getCompetitivePosition(receivablesTurnover, 'receivables-turnover'),
+      recommendations: this.getReceivablesTurnoverRecommendations(receivablesTurnover),
+      status: 'completed'
+    });
+
+    // 3) معدل دوران الأصول
+    const assetTurnover = (statement.incomeStatement.revenue || 0) / (statement.balanceSheet.totalAssets || 1);
+    results.push({
+      id: 'asset-turnover',
+      name: 'معدل دوران الأصول',
+      category: 'activity',
+      type: 'ratio',
+      currentValue: assetTurnover,
+      rating: this.rateAssetTurnover(assetTurnover),
+      interpretation: `معدل دوران الأصول ${assetTurnover.toFixed(2)} يشير إلى ${this.interpretAssetTurnover(assetTurnover)}`,
+      calculation: {
+        formula: 'صافي المبيعات ÷ متوسط إجمالي الأصول',
+        variables: {
+          'صافي المبيعات': statement.incomeStatement.revenue || 0,
+          'متوسط إجمالي الأصول': statement.balanceSheet.totalAssets || 0
+        }
+      },
+      benchmarkComparison: this.getBenchmarkComparison('asset-turnover', assetTurnover),
+      competitorAnalysis: this.getCompetitorAnalysis('asset-turnover', assetTurnover),
+      competitivePosition: this.getCompetitivePosition(assetTurnover, 'asset-turnover'),
+      recommendations: this.getAssetTurnoverRecommendations(assetTurnover),
+      status: 'completed'
+    });
+
+    return results;
+  }
+
+  private async calculateLeverageRatios(statement: FinancialStatement): Promise<AnalysisResult[]> {
+    const results: AnalysisResult[] = [];
+    
+    // 1) نسبة الدين إلى الأصول
+    const debtToAssets = (statement.balanceSheet.totalLiabilities || 0) / (statement.balanceSheet.totalAssets || 1);
+    results.push({
+      id: 'debt-to-assets',
+      name: 'نسبة الدين إلى الأصول',
+      category: 'leverage',
+      type: 'ratio',
+      currentValue: debtToAssets,
+      rating: this.rateDebtToAssets(debtToAssets),
+      interpretation: `نسبة الدين إلى الأصول ${debtToAssets.toFixed(2)} تشير إلى ${this.interpretDebtToAssets(debtToAssets)}`,
+      calculation: {
+        formula: 'إجمالي الديون ÷ إجمالي الأصول',
+        variables: {
+          'إجمالي الديون': statement.balanceSheet.totalLiabilities || 0,
+          'إجمالي الأصول': statement.balanceSheet.totalAssets || 0
+        }
+      },
+      benchmarkComparison: this.getBenchmarkComparison('debt-to-assets', debtToAssets),
+      competitorAnalysis: this.getCompetitorAnalysis('debt-to-assets', debtToAssets),
+      competitivePosition: this.getCompetitivePosition(debtToAssets, 'debt-to-assets'),
+      recommendations: this.getDebtToAssetsRecommendations(debtToAssets),
+      status: 'completed'
+    });
+
+    // 2) نسبة الدين إلى حقوق الملكية
+    const debtToEquity = (statement.balanceSheet.totalLiabilities || 0) / (statement.balanceSheet.shareholdersEquity || 1);
+    results.push({
+      id: 'debt-to-equity',
+      name: 'نسبة الدين إلى حقوق الملكية',
+      category: 'leverage',
+      type: 'ratio',
+      currentValue: debtToEquity,
+      rating: this.rateDebtToEquity(debtToEquity),
+      interpretation: `نسبة الدين إلى حقوق الملكية ${debtToEquity.toFixed(2)} تشير إلى ${this.interpretDebtToEquity(debtToEquity)}`,
+      calculation: {
+        formula: 'إجمالي الديون ÷ حقوق الملكية',
+        variables: {
+          'إجمالي الديون': statement.balanceSheet.totalLiabilities || 0,
+          'حقوق الملكية': statement.balanceSheet.shareholdersEquity || 0
+        }
+      },
+      benchmarkComparison: this.getBenchmarkComparison('debt-to-equity', debtToEquity),
+      competitorAnalysis: this.getCompetitorAnalysis('debt-to-equity', debtToEquity),
+      competitivePosition: this.getCompetitivePosition(debtToEquity, 'debt-to-equity'),
+      recommendations: this.getDebtToEquityRecommendations(debtToEquity),
+      status: 'completed'
+    });
+
+    return results;
+  }
+
+  private async calculateProfitabilityRatios(statement: FinancialStatement): Promise<AnalysisResult[]> {
+    const results: AnalysisResult[] = [];
+    
+    // 1) هامش صافي الربح
+    const netProfitMargin = ((statement.incomeStatement.netIncome || 0) / (statement.incomeStatement.revenue || 1)) * 100;
+    results.push({
+      id: 'net-profit-margin',
+      name: 'هامش صافي الربح',
+      category: 'profitability',
+      type: 'percentage',
+      currentValue: netProfitMargin,
+      rating: this.rateNetProfitMargin(netProfitMargin),
+      interpretation: `هامش صافي الربح ${netProfitMargin.toFixed(2)}% يشير إلى ${this.interpretNetProfitMargin(netProfitMargin)}`,
+      calculation: {
+        formula: '(صافي الربح ÷ صافي المبيعات) × 100',
+        variables: {
+          'صافي الربح': statement.incomeStatement.netIncome || 0,
+          'صافي المبيعات': statement.incomeStatement.revenue || 0
+        }
+      },
+      benchmarkComparison: this.getBenchmarkComparison('net-profit-margin', netProfitMargin),
+      competitorAnalysis: this.getCompetitorAnalysis('net-profit-margin', netProfitMargin),
+      competitivePosition: this.getCompetitivePosition(netProfitMargin, 'net-profit-margin'),
+      recommendations: this.getNetProfitMarginRecommendations(netProfitMargin),
+      status: 'completed'
+    });
+
+    // 2) العائد على الأصول
+    const returnOnAssets = ((statement.incomeStatement.netIncome || 0) / (statement.balanceSheet.totalAssets || 1)) * 100;
+    results.push({
+      id: 'return-on-assets',
+      name: 'العائد على الأصول',
+      category: 'profitability',
+      type: 'percentage',
+      currentValue: returnOnAssets,
+      rating: this.rateReturnOnAssets(returnOnAssets),
+      interpretation: `العائد على الأصول ${returnOnAssets.toFixed(2)}% يشير إلى ${this.interpretReturnOnAssets(returnOnAssets)}`,
+      calculation: {
+        formula: '(صافي الربح ÷ إجمالي الأصول) × 100',
+        variables: {
+          'صافي الربح': statement.incomeStatement.netIncome || 0,
+          'إجمالي الأصول': statement.balanceSheet.totalAssets || 0
+        }
+      },
+      benchmarkComparison: this.getBenchmarkComparison('return-on-assets', returnOnAssets),
+      competitorAnalysis: this.getCompetitorAnalysis('return-on-assets', returnOnAssets),
+      competitivePosition: this.getCompetitivePosition(returnOnAssets, 'return-on-assets'),
+      recommendations: this.getReturnOnAssetsRecommendations(returnOnAssets),
+      status: 'completed'
+    });
+
+    // 3) العائد على حقوق الملكية
+    const returnOnEquity = ((statement.incomeStatement.netIncome || 0) / (statement.balanceSheet.shareholdersEquity || 1)) * 100;
+    results.push({
+      id: 'return-on-equity',
+      name: 'العائد على حقوق الملكية',
+      category: 'profitability',
+      type: 'percentage',
+      currentValue: returnOnEquity,
+      rating: this.rateReturnOnEquity(returnOnEquity),
+      interpretation: `العائد على حقوق الملكية ${returnOnEquity.toFixed(2)}% يشير إلى ${this.interpretReturnOnEquity(returnOnEquity)}`,
+      calculation: {
+        formula: '(صافي الربح ÷ حقوق الملكية) × 100',
+        variables: {
+          'صافي الربح': statement.incomeStatement.netIncome || 0,
+          'حقوق الملكية': statement.balanceSheet.shareholdersEquity || 0
+        }
+      },
+      benchmarkComparison: this.getBenchmarkComparison('return-on-equity', returnOnEquity),
+      competitorAnalysis: this.getCompetitorAnalysis('return-on-equity', returnOnEquity),
+      competitivePosition: this.getCompetitivePosition(returnOnEquity, 'return-on-equity'),
+      recommendations: this.getReturnOnEquityRecommendations(returnOnEquity),
+      status: 'completed'
+    });
+
+    return results;
+  }
+
+  private async calculateMarketValueRatios(statement: FinancialStatement): Promise<AnalysisResult[]> {
+    const results: AnalysisResult[] = [];
+    
+    // 1) ربحية السهم
+    const earningsPerShare = (statement.incomeStatement.netIncome || 0) / (statement.balanceSheet.sharesOutstanding || 1);
+    results.push({
+      id: 'earnings-per-share',
+      name: 'ربحية السهم',
+      category: 'market',
+      type: 'currency',
+      currentValue: earningsPerShare,
+      rating: this.rateEarningsPerShare(earningsPerShare),
+      interpretation: `ربحية السهم ${earningsPerShare.toFixed(2)} ريال تشير إلى ${this.interpretEarningsPerShare(earningsPerShare)}`,
+      calculation: {
+        formula: 'صافي الربح ÷ عدد الأسهم المصدرة',
+        variables: {
+          'صافي الربح': statement.incomeStatement.netIncome || 0,
+          'عدد الأسهم المصدرة': statement.balanceSheet.sharesOutstanding || 0
+        }
+      },
+      benchmarkComparison: this.getBenchmarkComparison('earnings-per-share', earningsPerShare),
+      competitorAnalysis: this.getCompetitorAnalysis('earnings-per-share', earningsPerShare),
+      competitivePosition: this.getCompetitivePosition(earningsPerShare, 'earnings-per-share'),
+      recommendations: this.getEarningsPerShareRecommendations(earningsPerShare),
+      status: 'completed'
+    });
+
+    return results;
+  }
+
   // باقي التحليلات للـ 181 تحليل...
   // سيتم إضافة باقي التحليلات بنفس الطريقة المفصلة
+
+  // Helper methods for remaining analyses
+  private async performBasicRatiosAnalysis(statements: FinancialStatement[]): Promise<AnalysisResult[]> {
+    const results: AnalysisResult[] = [];
+    const latest = statements[statements.length - 1];
+    
+    // النسب المالية الأساسية (30 نسبة)
+    results.push(...await this.calculateLiquidityRatios(latest));
+    results.push(...await this.calculateActivityEfficiencyRatios(latest));
+    results.push(...await this.calculateLeverageRatios(latest));
+    results.push(...await this.calculateProfitabilityRatios(latest));
+    results.push(...await this.calculateMarketValueRatios(latest));
+    
+    return results;
+  }
+
+  private async performCashFlowAnalysis(statements: FinancialStatement[]): Promise<AnalysisResult[]> {
+    const results: AnalysisResult[] = [];
+    const latest = statements[statements.length - 1];
+    
+    // تحليلات التدفق والحركة (10 أنواع)
+    results.push(await this.calculateBasicCashFlowAnalysis(latest));
+    results.push(await this.calculateWorkingCapitalAnalysis(latest));
+    results.push(await this.calculateCashCycleAnalysis(latest));
+    results.push(await this.calculateBreakEvenAnalysis(latest));
+    results.push(await this.calculateMarginOfSafetyAnalysis(latest));
+    results.push(await this.calculateCostStructureAnalysis(latest));
+    results.push(await this.calculateFixedVariableCostsAnalysis(latest));
+    results.push(await this.calculateOperatingLeverageAnalysis(latest));
+    results.push(await this.calculateContributionMarginAnalysis(latest));
+    results.push(await this.calculateFreeCashFlowAnalysis(latest));
+    
+    return results;
+  }
+
+  private async performValuationAnalysis(statements: FinancialStatement[]): Promise<AnalysisResult[]> {
+    const results: AnalysisResult[] = [];
+    const latest = statements[statements.length - 1];
+    
+    // تحليلات التقييم والاستثمار (16 نوع)
+    results.push(await this.calculateTimeValueOfMoneyAnalysis(latest));
+    results.push(await this.calculateNetPresentValueAnalysis(latest));
+    results.push(await this.calculateInternalRateOfReturnAnalysis(latest));
+    results.push(await this.calculatePaybackPeriodAnalysis(latest));
+    results.push(await this.calculateDiscountedCashFlowAnalysis(latest));
+    results.push(await this.calculateReturnOnInvestmentAnalysis(latest));
+    results.push(await this.calculateEconomicValueAddedAnalysis(latest));
+    results.push(await this.calculateMarketValueAddedAnalysis(latest));
+    results.push(await this.calculateGordonGrowthModelAnalysis(latest));
+    results.push(await this.calculateDividendDiscountModelAnalysis(latest));
+    results.push(await this.calculateFairValueAnalysis(latest));
+    results.push(await this.calculateCostBenefitAnalysis(latest));
+    results.push(await this.calculateFinancialFeasibilityAnalysis(latest));
+    results.push(await this.calculateProjectInvestmentAnalysis(latest));
+    results.push(await this.calculateInvestmentAlternativesAnalysis(latest));
+    results.push(await this.calculateCompanyValuationAnalysis(latest));
+    
+    return results;
+  }
+
+  private async performPerformanceAnalysis(statements: FinancialStatement[]): Promise<AnalysisResult[]> {
+    const results: AnalysisResult[] = [];
+    const latest = statements[statements.length - 1];
+    
+    // تحليلات الأداء والكفاءة (12 نوع)
+    results.push(await this.calculateDuPontAnalysis(latest));
+    results.push(await this.calculateProductivityAnalysis(latest));
+    results.push(await this.calculateOperationalEfficiencyAnalysis(latest));
+    results.push(await this.calculateValueChainAnalysis(latest));
+    results.push(await this.calculateActivityBasedCostingAnalysis(latest));
+    results.push(await this.calculateBalancedScorecardAnalysis(latest));
+    results.push(await this.calculateKeyPerformanceIndicatorsAnalysis(latest));
+    results.push(await this.calculateCriticalSuccessFactorsAnalysis(latest));
+    results.push(await this.calculateAdvancedVarianceAnalysis(latest));
+    results.push(await this.calculateDeviationAnalysis(latest));
+    results.push(await this.calculateFlexibilityAnalysis(latest));
+    results.push(await this.calculateSensitivityAnalysis(latest));
+    
+    return results;
+  }
+
+  private async performModelingAnalysis(statements: FinancialStatement[]): Promise<AnalysisResult[]> {
+    const results: AnalysisResult[] = [];
+    const latest = statements[statements.length - 1];
+    
+    // النمذجة والمحاكاة (15 نوع)
+    results.push(await this.calculateAdvancedScenarioAnalysis(latest));
+    results.push(await this.calculateMonteCarloAnalysis(latest));
+    results.push(await this.calculateComplexFinancialModeling(latest));
+    results.push(await this.calculateMultiVariateSensitivityAnalysis(latest));
+    results.push(await this.calculateDecisionTreeAnalysis(latest));
+    results.push(await this.calculateRealOptionsAnalysis(latest));
+    results.push(await this.calculateFinancialForecastingModels(latest));
+    results.push(await this.calculateWhatIfAnalysis(latest));
+    results.push(await this.calculateStochasticSimulation(latest));
+    results.push(await this.calculateOptimizationModels(latest));
+    results.push(await this.calculateFinancialLinearProgramming(latest));
+    results.push(await this.calculateDynamicProgrammingAnalysis(latest));
+    results.push(await this.calculateOptimalAllocationModels(latest));
+    results.push(await this.calculateFinancialGameTheoryAnalysis(latest));
+    results.push(await this.calculateFinancialNetworkAnalysis(latest));
+    
+    return results;
+  }
+
+  private async performStatisticalAnalysis(statements: FinancialStatement[]): Promise<AnalysisResult[]> {
+    const results: AnalysisResult[] = [];
+    const latest = statements[statements.length - 1];
+    
+    // التحليل الإحصائي والكمي (20 نوع)
+    results.push(await this.calculateMultipleRegressionAnalysis(latest));
+    results.push(await this.calculateAdvancedTimeSeriesAnalysis(latest));
+    results.push(await this.calculateARIMAModels(latest));
+    results.push(await this.calculateGARCHModels(latest));
+    results.push(await this.calculatePrincipalComponentAnalysis(latest));
+    results.push(await this.calculateFactorAnalysis(latest));
+    results.push(await this.calculateANOVAAnalysis(latest));
+    results.push(await this.calculateCointegrationAnalysis(latest));
+    results.push(await this.calculateVARModels(latest));
+    results.push(await this.calculateVECMModels(latest));
+    results.push(await this.calculateCopulaAnalysis(latest));
+    results.push(await this.calculateExtremeValueTheory(latest));
+    results.push(await this.calculateSurvivalAnalysis(latest));
+    results.push(await this.calculateMarkovModels(latest));
+    results.push(await this.calculateThresholdAnalysis(latest));
+    results.push(await this.calculateRegimeSwitching(latest));
+    results.push(await this.calculateChaosTheory(latest));
+    results.push(await this.calculateFractalAnalysis(latest));
+    results.push(await this.calculateBootstrapAnalysis(latest));
+    results.push(await this.calculateWaveletAnalysis(latest));
+    
+    return results;
+  }
+
+  private async performRiskAnalysis(statements: FinancialStatement[]): Promise<AnalysisResult[]> {
+    const results: AnalysisResult[] = [];
+    const latest = statements[statements.length - 1];
+    
+    // تحليل المحافظ والمخاطر (35 نوع)
+    results.push(await this.calculateModernPortfolioTheory(latest));
+    results.push(await this.calculateCAPMAnalysis(latest));
+    results.push(await this.calculateArbitragePricingTheory(latest));
+    results.push(await this.calculateFamaFrenchModel(latest));
+    results.push(await this.calculateBetaAnalysis(latest));
+    results.push(await this.calculateAlphaAnalysis(latest));
+    results.push(await this.calculateValueAtRisk(latest));
+    results.push(await this.calculateExpectedShortfall(latest));
+    results.push(await this.calculateStressTesting(latest));
+    results.push(await this.calculateCatastrophicScenarios(latest));
+    results.push(await this.calculateOperationalRisk(latest));
+    results.push(await this.calculateMarketRisk(latest));
+    results.push(await this.calculateCreditRisk(latest));
+    results.push(await this.calculateLiquidityRisk(latest));
+    results.push(await this.calculateCyberRisk(latest));
+    results.push(await this.calculateGeopoliticalRisk(latest));
+    results.push(await this.calculateEnvironmentalRisk(latest));
+    results.push(await this.calculateGovernanceAnalysis(latest));
+    results.push(await this.calculateSocialResponsibility(latest));
+    results.push(await this.calculateLegalAssessment(latest));
+    results.push(await this.calculateCreditRiskModels(latest));
+    results.push(await this.calculateConcentrationDiversification(latest));
+    results.push(await this.calculateDynamicCorrelation(latest));
+    results.push(await this.calculateRiskParity(latest));
+    results.push(await this.calculateDrawdownAnalysis(latest));
+    results.push(await this.calculateICAAP(latest));
+    results.push(await this.calculateBaselIII(latest));
+    results.push(await this.calculateBacktesting(latest));
+    results.push(await this.calculateMergersAcquisitions(latest));
+    results.push(await this.calculateLeveragedBuyouts(latest));
+    results.push(await this.calculateIPOAnalysis(latest));
+    results.push(await this.calculateSpinOffAnalysis(latest));
+    results.push(await this.calculateRestructuringAnalysis(latest));
+    results.push(await this.calculateBankruptcyAnalysis(latest));
+    results.push(await this.calculateForensicFinancialAnalysis(latest));
+    
+    return results;
+  }
+
+  private async performIntelligentDetectionAnalysis(statements: FinancialStatement[]): Promise<AnalysisResult[]> {
+    const results: AnalysisResult[] = [];
+    const latest = statements[statements.length - 1];
+    
+    // الكشف والتنبؤ الذكي (18 نوع)
+    results.push(await this.calculateAIFraudDetection(latest));
+    results.push(await this.calculateMoneyLaunderingDetection(latest));
+    results.push(await this.calculateMarketManipulationDetection(latest));
+    results.push(await this.calculateAdvancedBankruptcyPrediction(latest));
+    results.push(await this.calculateFinancialCrisisPrediction(latest));
+    results.push(await this.calculateRealTimeAnomalyDetection(latest));
+    results.push(await this.calculateMarketVolatilityPrediction(latest));
+    results.push(await this.calculateEarlyWarningModels(latest));
+    results.push(await this.calculateIntelligentFinancialBehaviorAnalysis(latest));
+    results.push(await this.calculateExplainableAIFinancialDecisions(latest));
+    results.push(await this.calculateNeuralNetworkFinancialPrediction(latest));
+    results.push(await this.calculateLSTMTimeSeriesAnalysis(latest));
+    results.push(await this.calculateRandomForestCreditClassification(latest));
+    results.push(await this.calculateGradientBoostingPrediction(latest));
+    results.push(await this.calculateClusteringFinancialClassification(latest));
+    results.push(await this.calculateAutoencodersAnomalyDetection(latest));
+    results.push(await this.calculateAISentimentAnalysis(latest));
+    results.push(await this.calculateBlockchainAnalytics(latest));
+    
+    return results;
+  }
+
+  // Helper methods for rating and interpretation
+  private rateQuickRatio(ratio: number): 'excellent' | 'good' | 'average' | 'poor' {
+    return this.rateValue(ratio, { excellent: 1.5, good: 1.0, average: 0.5 });
+  }
+
+  private rateCashRatio(ratio: number): 'excellent' | 'good' | 'average' | 'poor' {
+    return this.rateValue(ratio, { excellent: 0.3, good: 0.2, average: 0.1 });
+  }
+
+  private rateOperatingCashFlowRatio(ratio: number): 'excellent' | 'good' | 'average' | 'poor' {
+    return this.rateValue(ratio, { excellent: 0.4, good: 0.2, average: 0.1 });
+  }
+
+  private rateWorkingCapitalRatio(ratio: number): 'excellent' | 'good' | 'average' | 'poor' {
+    return this.rateValue(ratio, { excellent: 0.3, good: 0.2, average: 0.1 });
+  }
+
+  private rateInventoryTurnover(ratio: number): 'excellent' | 'good' | 'average' | 'poor' {
+    return this.rateValue(ratio, { excellent: 8, good: 6, average: 4 });
+  }
+
+  private rateReceivablesTurnover(ratio: number): 'excellent' | 'good' | 'average' | 'poor' {
+    return this.rateValue(ratio, { excellent: 12, good: 8, average: 6 });
+  }
+
+  private rateAssetTurnover(ratio: number): 'excellent' | 'good' | 'average' | 'poor' {
+    return this.rateValue(ratio, { excellent: 1.5, good: 1.0, average: 0.5 });
+  }
+
+  private rateDebtToAssets(ratio: number): 'excellent' | 'good' | 'average' | 'poor' {
+    return this.rateValue(ratio, { excellent: 0.3, good: 0.5, average: 0.7 });
+  }
+
+  private rateDebtToEquity(ratio: number): 'excellent' | 'good' | 'average' | 'poor' {
+    return this.rateValue(ratio, { excellent: 0.5, good: 1.0, average: 2.0 });
+  }
+
+  private rateNetProfitMargin(margin: number): 'excellent' | 'good' | 'average' | 'poor' {
+    return this.rateValue(margin, { excellent: 15, good: 10, average: 5 });
+  }
+
+  private rateReturnOnAssets(roa: number): 'excellent' | 'good' | 'average' | 'poor' {
+    return this.rateValue(roa, { excellent: 15, good: 10, average: 5 });
+  }
+
+  private rateReturnOnEquity(roe: number): 'excellent' | 'good' | 'average' | 'poor' {
+    return this.rateValue(roe, { excellent: 20, good: 15, average: 10 });
+  }
+
+  private rateEarningsPerShare(eps: number): 'excellent' | 'good' | 'average' | 'poor' {
+    return this.rateValue(eps, { excellent: 5, good: 3, average: 1 });
+  }
+
+  // Interpretation methods
+  private interpretQuickRatio(ratio: number): string {
+    if (ratio >= 1.5) return 'قدرة ممتازة على الوفاء بالالتزامات قصيرة الأجل بدون الاعتماد على المخزون';
+    if (ratio >= 1.0) return 'قدرة جيدة على الوفاء بالالتزامات المتداولة';
+    if (ratio >= 0.5) return 'قدرة محدودة على الوفاء بالالتزامات قصيرة الأجل';
+    return 'صعوبة في الوفاء بالالتزامات المتداولة';
+  }
+
+  private interpretCashRatio(ratio: number): string {
+    if (ratio >= 0.3) return 'سيولة نقدية ممتازة للوفاء بالالتزامات قصيرة الأجل';
+    if (ratio >= 0.2) return 'سيولة نقدية جيدة';
+    if (ratio >= 0.1) return 'سيولة نقدية محدودة';
+    return 'سيولة نقدية ضعيفة';
+  }
+
+  private interpretOperatingCashFlowRatio(ratio: number): string {
+    if (ratio >= 0.4) return 'تدفق نقدي تشغيلي ممتاز لتغطية الالتزامات قصيرة الأجل';
+    if (ratio >= 0.2) return 'تدفق نقدي تشغيلي جيد';
+    if (ratio >= 0.1) return 'تدفق نقدي تشغيلي محدود';
+    return 'تدفق نقدي تشغيلي ضعيف';
+  }
+
+  private interpretWorkingCapitalRatio(ratio: number): string {
+    if (ratio >= 0.3) return 'رأس مال عامل ممتاز يدعم النمو';
+    if (ratio >= 0.2) return 'رأس مال عامل جيد';
+    if (ratio >= 0.1) return 'رأس مال عامل محدود';
+    return 'رأس مال عامل ضعيف';
+  }
+
+  private interpretInventoryTurnover(ratio: number): string {
+    if (ratio >= 8) return 'إدارة ممتازة للمخزون وكفاءة عالية في البيع';
+    if (ratio >= 6) return 'إدارة جيدة للمخزون';
+    if (ratio >= 4) return 'إدارة متوسطة للمخزون';
+    return 'إدارة ضعيفة للمخزون';
+  }
+
+  private interpretReceivablesTurnover(ratio: number): string {
+    if (ratio >= 12) return 'تحصيل ممتاز للذمم المدينة';
+    if (ratio >= 8) return 'تحصيل جيد للذمم المدينة';
+    if (ratio >= 6) return 'تحصيل متوسط للذمم المدينة';
+    return 'تحصيل ضعيف للذمم المدينة';
+  }
+
+  private interpretAssetTurnover(ratio: number): string {
+    if (ratio >= 1.5) return 'كفاءة ممتازة في استخدام الأصول';
+    if (ratio >= 1.0) return 'كفاءة جيدة في استخدام الأصول';
+    if (ratio >= 0.5) return 'كفاءة متوسطة في استخدام الأصول';
+    return 'كفاءة ضعيفة في استخدام الأصول';
+  }
+
+  private interpretDebtToAssets(ratio: number): string {
+    if (ratio <= 0.3) return 'مستوى دين منخفض ومخاطر مالية قليلة';
+    if (ratio <= 0.5) return 'مستوى دين معقول';
+    if (ratio <= 0.7) return 'مستوى دين مرتفع';
+    return 'مستوى دين عالي جداً ومخاطر مالية كبيرة';
+  }
+
+  private interpretDebtToEquity(ratio: number): string {
+    if (ratio <= 0.5) return 'هيكل مالي محافظ ومخاطر منخفضة';
+    if (ratio <= 1.0) return 'هيكل مالي متوازن';
+    if (ratio <= 2.0) return 'هيكل مالي محفوف بالمخاطر';
+    return 'هيكل مالي عالي المخاطر';
+  }
+
+  private interpretNetProfitMargin(margin: number): string {
+    if (margin >= 15) return 'ربحية ممتازة وكفاءة عالية في الإدارة';
+    if (margin >= 10) return 'ربحية جيدة';
+    if (margin >= 5) return 'ربحية متوسطة';
+    return 'ربحية ضعيفة';
+  }
+
+  private interpretReturnOnAssets(roa: number): string {
+    if (roa >= 15) return 'عائد ممتاز على الأصول وكفاءة عالية';
+    if (roa >= 10) return 'عائد جيد على الأصول';
+    if (roa >= 5) return 'عائد متوسط على الأصول';
+    return 'عائد ضعيف على الأصول';
+  }
+
+  private interpretReturnOnEquity(roe: number): string {
+    if (roe >= 20) return 'عائد ممتاز على حقوق الملكية';
+    if (roe >= 15) return 'عائد جيد على حقوق الملكية';
+    if (roe >= 10) return 'عائد متوسط على حقوق الملكية';
+    return 'عائد ضعيف على حقوق الملكية';
+  }
+
+  private interpretEarningsPerShare(eps: number): string {
+    if (eps >= 5) return 'ربحية ممتازة للسهم';
+    if (eps >= 3) return 'ربحية جيدة للسهم';
+    if (eps >= 1) return 'ربحية متوسطة للسهم';
+    return 'ربحية ضعيفة للسهم';
+  }
+
+  // Recommendation methods
+  private getQuickRatioRecommendations(ratio: number): string[] {
+    const recommendations: string[] = [];
+    
+    if (ratio < 1) {
+      recommendations.push('زيادة الأصول السريعة أو تقليل الالتزامات قصيرة الأجل');
+      recommendations.push('تحسين إدارة المخزون لتقليل الاعتماد عليه');
+    } else if (ratio > 2) {
+      recommendations.push('استثمار الأصول الزائدة في فرص نمو مربحة');
+    }
+    
+    recommendations.push('مراقبة النسبة شهرياً');
+    
+    return recommendations;
+  }
+
+  private getCashRatioRecommendations(ratio: number): string[] {
+    const recommendations: string[] = [];
+    
+    if (ratio < 0.1) {
+      recommendations.push('زيادة السيولة النقدية فوراً');
+      recommendations.push('تحسين إدارة التدفق النقدي');
+    } else if (ratio > 0.5) {
+      recommendations.push('استثمار النقد الزائد في استثمارات آمنة');
+    }
+    
+    return recommendations;
+  }
+
+  private getOperatingCashFlowRatioRecommendations(ratio: number): string[] {
+    const recommendations: string[] = [];
+    
+    if (ratio < 0.1) {
+      recommendations.push('تحسين التدفق النقدي التشغيلي');
+      recommendations.push('مراجعة سياسات التحصيل والدفع');
+    }
+    
+    return recommendations;
+  }
+
+  private getWorkingCapitalRatioRecommendations(ratio: number): string[] {
+    const recommendations: string[] = [];
+    
+    if (ratio < 0.1) {
+      recommendations.push('زيادة رأس المال العامل');
+      recommendations.push('تحسين إدارة الأصول المتداولة');
+    }
+    
+    return recommendations;
+  }
+
+  private getInventoryTurnoverRecommendations(ratio: number): string[] {
+    const recommendations: string[] = [];
+    
+    if (ratio < 4) {
+      recommendations.push('تحسين إدارة المخزون');
+      recommendations.push('تسريع مبيعات المخزون');
+    }
+    
+    return recommendations;
+  }
+
+  private getReceivablesTurnoverRecommendations(ratio: number): string[] {
+    const recommendations: string[] = [];
+    
+    if (ratio < 6) {
+      recommendations.push('تحسين سياسات التحصيل');
+      recommendations.push('تسريع تحصيل الذمم المدينة');
+    }
+    
+    return recommendations;
+  }
+
+  private getAssetTurnoverRecommendations(ratio: number): string[] {
+    const recommendations: string[] = [];
+    
+    if (ratio < 0.5) {
+      recommendations.push('تحسين كفاءة استخدام الأصول');
+      recommendations.push('مراجعة هيكل الأصول');
+    }
+    
+    return recommendations;
+  }
+
+  private getDebtToAssetsRecommendations(ratio: number): string[] {
+    const recommendations: string[] = [];
+    
+    if (ratio > 0.7) {
+      recommendations.push('تقليل مستوى المديونية');
+      recommendations.push('زيادة حقوق الملكية');
+    }
+    
+    return recommendations;
+  }
+
+  private getDebtToEquityRecommendations(ratio: number): string[] {
+    const recommendations: string[] = [];
+    
+    if (ratio > 2) {
+      recommendations.push('تقليل الديون أو زيادة حقوق الملكية');
+      recommendations.push('مراجعة هيكل رأس المال');
+    }
+    
+    return recommendations;
+  }
+
+  private getNetProfitMarginRecommendations(margin: number): string[] {
+    const recommendations: string[] = [];
+    
+    if (margin < 5) {
+      recommendations.push('تحسين هامش الربح');
+      recommendations.push('تقليل التكاليف أو زيادة الأسعار');
+    }
+    
+    return recommendations;
+  }
+
+  private getReturnOnAssetsRecommendations(roa: number): string[] {
+    const recommendations: string[] = [];
+    
+    if (roa < 5) {
+      recommendations.push('تحسين كفاءة استخدام الأصول');
+      recommendations.push('زيادة الربحية');
+    }
+    
+    return recommendations;
+  }
+
+  private getReturnOnEquityRecommendations(roe: number): string[] {
+    const recommendations: string[] = [];
+    
+    if (roe < 10) {
+      recommendations.push('تحسين العائد على حقوق الملكية');
+      recommendations.push('زيادة الربحية أو تقليل حقوق الملكية');
+    }
+    
+    return recommendations;
+  }
+
+  private getEarningsPerShareRecommendations(eps: number): string[] {
+    const recommendations: string[] = [];
+    
+    if (eps < 1) {
+      recommendations.push('زيادة ربحية السهم');
+      recommendations.push('تحسين الأداء المالي');
+    }
+    
+    return recommendations;
+  }
+
+  // Placeholder methods for remaining analyses (to be implemented)
+  private async calculateBasicCashFlowAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('basic-cash-flow', 'تحليل التدفق النقدي الأساسي');
+  }
+
+  private async calculateWorkingCapitalAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('working-capital', 'تحليل رأس المال العامل');
+  }
+
+  private async calculateCashCycleAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('cash-cycle', 'تحليل دورة النقد');
+  }
+
+  private async calculateBreakEvenAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('break-even', 'تحليل نقطة التعادل');
+  }
+
+  private async calculateMarginOfSafetyAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('margin-of-safety', 'تحليل هامش الأمان');
+  }
+
+  private async calculateCostStructureAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('cost-structure', 'تحليل هيكل التكاليف');
+  }
+
+  private async calculateFixedVariableCostsAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('fixed-variable-costs', 'تحليل التكاليف الثابتة والمتغيرة');
+  }
+
+  private async calculateOperatingLeverageAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('operating-leverage', 'تحليل الرافعة التشغيلية');
+  }
+
+  private async calculateContributionMarginAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('contribution-margin', 'تحليل هامش المساهمة');
+  }
+
+  private async calculateFreeCashFlowAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('free-cash-flow', 'تحليل التدفق النقدي الحر');
+  }
+
+  // Placeholder methods for all other analyses
+  private async calculateTimeValueOfMoneyAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('time-value-of-money', 'تحليل القيمة الزمنية للنقود');
+  }
+
+  private async calculateNetPresentValueAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('net-present-value', 'تحليل صافي القيمة الحالية');
+  }
+
+  private async calculateInternalRateOfReturnAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('internal-rate-of-return', 'تحليل معدل العائد الداخلي');
+  }
+
+  private async calculatePaybackPeriodAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('payback-period', 'تحليل فترة الاسترداد');
+  }
+
+  private async calculateDiscountedCashFlowAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('discounted-cash-flow', 'تحليل التدفقات النقدية المخصومة');
+  }
+
+  private async calculateReturnOnInvestmentAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('return-on-investment', 'تحليل العائد على الاستثمار');
+  }
+
+  private async calculateEconomicValueAddedAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('economic-value-added', 'تحليل القيمة الاقتصادية المضافة');
+  }
+
+  private async calculateMarketValueAddedAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('market-value-added', 'تحليل القيمة السوقية المضافة');
+  }
+
+  private async calculateGordonGrowthModelAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('gordon-growth-model', 'نموذج جوردون للنمو');
+  }
+
+  private async calculateDividendDiscountModelAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('dividend-discount-model', 'نموذج خصم الأرباح');
+  }
+
+  private async calculateFairValueAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('fair-value', 'تحليل القيمة العادلة');
+  }
+
+  private async calculateCostBenefitAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('cost-benefit', 'تحليل التكلفة والمنفعة');
+  }
+
+  private async calculateFinancialFeasibilityAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('financial-feasibility', 'تحليل الجدوى المالية');
+  }
+
+  private async calculateProjectInvestmentAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('project-investment', 'تحليل استثمار المشاريع');
+  }
+
+  private async calculateInvestmentAlternativesAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('investment-alternatives', 'تحليل البدائل الاستثمارية');
+  }
+
+  private async calculateCompanyValuationAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('company-valuation', 'تقييم الشركة');
+  }
+
+  // DuPont and Performance Analysis
+  private async calculateDuPontAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('dupont', 'تحليل دوبونت');
+  }
+
+  private async calculateProductivityAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('productivity', 'تحليل الإنتاجية');
+  }
+
+  private async calculateOperationalEfficiencyAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('operational-efficiency', 'تحليل الكفاءة التشغيلية');
+  }
+
+  private async calculateValueChainAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('value-chain', 'تحليل سلسلة القيمة');
+  }
+
+  private async calculateActivityBasedCostingAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('activity-based-costing', 'تحليل التكاليف على أساس الأنشطة');
+  }
+
+  private async calculateBalancedScorecardAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('balanced-scorecard', 'البطاقة المتوازنة للأداء');
+  }
+
+  private async calculateKeyPerformanceIndicatorsAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('key-performance-indicators', 'مؤشرات الأداء الرئيسية');
+  }
+
+  private async calculateCriticalSuccessFactorsAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('critical-success-factors', 'عوامل النجاح الحرجة');
+  }
+
+  private async calculateAdvancedVarianceAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('advanced-variance', 'تحليل الانحرافات المتقدم');
+  }
+
+  private async calculateDeviationAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('deviation', 'تحليل الانحرافات');
+  }
+
+  private async calculateFlexibilityAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('flexibility', 'تحليل المرونة');
+  }
+
+  private async calculateSensitivityAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('sensitivity', 'تحليل الحساسية');
+  }
+
+  // Modeling and Simulation
+  private async calculateAdvancedScenarioAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('advanced-scenario', 'تحليل السيناريوهات المتقدم');
+  }
+
+  private async calculateMonteCarloAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('monte-carlo', 'تحليل مونت كارلو');
+  }
+
+  private async calculateComplexFinancialModeling(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('complex-financial-modeling', 'النمذجة المالية المعقدة');
+  }
+
+  private async calculateMultiVariateSensitivityAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('multi-variate-sensitivity', 'تحليل الحساسية متعدد المتغيرات');
+  }
+
+  private async calculateDecisionTreeAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('decision-tree', 'تحليل شجرة القرار');
+  }
+
+  private async calculateRealOptionsAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('real-options', 'تحليل الخيارات الحقيقية');
+  }
+
+  private async calculateFinancialForecastingModels(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('financial-forecasting', 'نماذج التنبؤ المالي');
+  }
+
+  private async calculateWhatIfAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('what-if', 'تحليل ماذا لو');
+  }
+
+  private async calculateStochasticSimulation(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('stochastic-simulation', 'المحاكاة العشوائية');
+  }
+
+  private async calculateOptimizationModels(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('optimization-models', 'نماذج التحسين');
+  }
+
+  private async calculateFinancialLinearProgramming(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('financial-linear-programming', 'البرمجة الخطية المالية');
+  }
+
+  private async calculateDynamicProgrammingAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('dynamic-programming', 'تحليل البرمجة الديناميكية');
+  }
+
+  private async calculateOptimalAllocationModels(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('optimal-allocation', 'نماذج التخصيص الأمثل');
+  }
+
+  private async calculateFinancialGameTheoryAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('financial-game-theory', 'تحليل نظرية الألعاب المالية');
+  }
+
+  private async calculateFinancialNetworkAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('financial-network', 'تحليل الشبكات المالية');
+  }
+
+  // Statistical and Quantitative Analysis
+  private async calculateMultipleRegressionAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('multiple-regression', 'تحليل الانحدار المتعدد');
+  }
+
+  private async calculateAdvancedTimeSeriesAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('advanced-time-series', 'تحليل السلاسل الزمنية المتقدم');
+  }
+
+  private async calculateARIMAModels(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('arima-models', 'نماذج ARIMA');
+  }
+
+  private async calculateGARCHModels(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('garch-models', 'نماذج GARCH');
+  }
+
+  private async calculatePrincipalComponentAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('principal-component', 'تحليل المكونات الرئيسية');
+  }
+
+  private async calculateFactorAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('factor-analysis', 'تحليل العوامل');
+  }
+
+  private async calculateANOVAAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('anova', 'تحليل التباين');
+  }
+
+  private async calculateCointegrationAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('cointegration', 'تحليل التكامل المشترك');
+  }
+
+  private async calculateVARModels(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('var-models', 'نماذج VAR');
+  }
+
+  private async calculateVECMModels(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('vecm-models', 'نماذج VECM');
+  }
+
+  private async calculateCopulaAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('copula', 'تحليل الكوبولا');
+  }
+
+  private async calculateExtremeValueTheory(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('extreme-value', 'نظرية القيم المتطرفة');
+  }
+
+  private async calculateSurvivalAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('survival', 'تحليل البقاء');
+  }
+
+  private async calculateMarkovModels(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('markov', 'نماذج ماركوف');
+  }
+
+  private async calculateThresholdAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('threshold', 'تحليل العتبة');
+  }
+
+  private async calculateRegimeSwitching(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('regime-switching', 'تبديل النظام');
+  }
+
+  private async calculateChaosTheory(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('chaos-theory', 'نظرية الفوضى');
+  }
+
+  private async calculateFractalAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('fractal', 'التحليل الكسري');
+  }
+
+  private async calculateBootstrapAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('bootstrap', 'تحليل البوتستراب');
+  }
+
+  private async calculateWaveletAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('wavelet', 'التحليل بالموجات');
+  }
+
+  // Portfolio and Risk Analysis
+  private async calculateModernPortfolioTheory(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('modern-portfolio', 'نظرية المحفظة الحديثة');
+  }
+
+  private async calculateCAPMAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('capm', 'نموذج تسعير الأصول الرأسمالية');
+  }
+
+  private async calculateArbitragePricingTheory(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('arbitrage-pricing', 'نظرية تسعير المراجحة');
+  }
+
+  private async calculateFamaFrenchModel(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('fama-french', 'نموذج فاما فرينش');
+  }
+
+  private async calculateBetaAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('beta', 'تحليل بيتا');
+  }
+
+  private async calculateAlphaAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('alpha', 'تحليل ألفا');
+  }
+
+  private async calculateValueAtRisk(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('value-at-risk', 'القيمة المعرضة للخطر');
+  }
+
+  private async calculateExpectedShortfall(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('expected-shortfall', 'العجز المتوقع');
+  }
+
+  private async calculateStressTesting(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('stress-testing', 'اختبارات الإجهاد');
+  }
+
+  private async calculateCatastrophicScenarios(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('catastrophic-scenarios', 'السيناريوهات الكارثية');
+  }
+
+  private async calculateOperationalRisk(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('operational-risk', 'المخاطر التشغيلية');
+  }
+
+  private async calculateMarketRisk(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('market-risk', 'مخاطر السوق');
+  }
+
+  private async calculateCreditRisk(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('credit-risk', 'مخاطر الائتمان');
+  }
+
+  private async calculateLiquidityRisk(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('liquidity-risk', 'مخاطر السيولة');
+  }
+
+  private async calculateCyberRisk(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('cyber-risk', 'المخاطر السيبرانية');
+  }
+
+  private async calculateGeopoliticalRisk(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('geopolitical-risk', 'المخاطر الجيوسياسية');
+  }
+
+  private async calculateEnvironmentalRisk(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('environmental-risk', 'المخاطر البيئية');
+  }
+
+  private async calculateGovernanceAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('governance', 'تحليل الحوكمة');
+  }
+
+  private async calculateSocialResponsibility(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('social-responsibility', 'المسؤولية الاجتماعية');
+  }
+
+  private async calculateLegalAssessment(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('legal-assessment', 'التقييم القانوني');
+  }
+
+  private async calculateCreditRiskModels(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('credit-risk-models', 'نماذج مخاطر الائتمان');
+  }
+
+  private async calculateConcentrationDiversification(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('concentration-diversification', 'التركيز والتنويع');
+  }
+
+  private async calculateDynamicCorrelation(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('dynamic-correlation', 'الارتباط الديناميكي');
+  }
+
+  private async calculateRiskParity(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('risk-parity', 'تكافؤ المخاطر');
+  }
+
+  private async calculateDrawdownAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('drawdown', 'تحليل الانخفاض');
+  }
+
+  private async calculateICAAP(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('icaap', 'ICAAP');
+  }
+
+  private async calculateBaselIII(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('basel-iii', 'بازل III');
+  }
+
+  private async calculateBacktesting(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('backtesting', 'الاختبار العكسي');
+  }
+
+  private async calculateMergersAcquisitions(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('mergers-acquisitions', 'الاندماج والاستحواذ');
+  }
+
+  private async calculateLeveragedBuyouts(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('leveraged-buyouts', 'الاستحواذ بالرافعة المالية');
+  }
+
+  private async calculateIPOAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('ipo', 'تحليل الطرح العام الأولي');
+  }
+
+  private async calculateSpinOffAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('spin-off', 'تحليل الانفصال');
+  }
+
+  private async calculateRestructuringAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('restructuring', 'تحليل إعادة الهيكلة');
+  }
+
+  private async calculateBankruptcyAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('bankruptcy', 'تحليل الإفلاس');
+  }
+
+  private async calculateForensicFinancialAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('forensic-financial', 'التحليل المالي الجنائي');
+  }
+
+  // Intelligent Detection and Prediction
+  private async calculateAIFraudDetection(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('ai-fraud-detection', 'كشف الاحتيال بالذكاء الاصطناعي');
+  }
+
+  private async calculateMoneyLaunderingDetection(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('money-laundering', 'كشف غسيل الأموال');
+  }
+
+  private async calculateMarketManipulationDetection(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('market-manipulation', 'كشف التلاعب في السوق');
+  }
+
+  private async calculateAdvancedBankruptcyPrediction(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('advanced-bankruptcy', 'التنبؤ بالإفلاس المتقدم');
+  }
+
+  private async calculateFinancialCrisisPrediction(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('financial-crisis', 'التنبؤ بالأزمات المالية');
+  }
+
+  private async calculateRealTimeAnomalyDetection(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('real-time-anomaly', 'كشف الشذوذ في الوقت الفعلي');
+  }
+
+  private async calculateMarketVolatilityPrediction(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('market-volatility', 'التنبؤ بتقلبات السوق');
+  }
+
+  private async calculateEarlyWarningModels(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('early-warning', 'نماذج الإنذار المبكر');
+  }
+
+  private async calculateIntelligentFinancialBehaviorAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('intelligent-behavior', 'تحليل السلوك المالي الذكي');
+  }
+
+  private async calculateExplainableAIFinancialDecisions(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('explainable-ai', 'الذكاء الاصطناعي القابل للتفسير');
+  }
+
+  private async calculateNeuralNetworkFinancialPrediction(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('neural-network', 'الشبكات العصبية للتنبؤ المالي');
+  }
+
+  private async calculateLSTMTimeSeriesAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('lstm-time-series', 'شبكات LSTM للسلاسل الزمنية');
+  }
+
+  private async calculateRandomForestCreditClassification(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('random-forest', 'Random Forest للتصنيف الائتماني');
+  }
+
+  private async calculateGradientBoostingPrediction(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('gradient-boosting', 'Gradient Boosting للتنبؤ');
+  }
+
+  private async calculateClusteringFinancialClassification(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('clustering', 'التجميع للتصنيف المالي');
+  }
+
+  private async calculateAutoencodersAnomalyDetection(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('autoencoders', 'Autoencoders للكشف عن الشذوذ');
+  }
+
+  private async calculateAISentimentAnalysis(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('ai-sentiment', 'تحليل المشاعر بالذكاء الاصطناعي');
+  }
+
+  private async calculateBlockchainAnalytics(statement: FinancialStatement): Promise<AnalysisResult> {
+    return this.createErrorResult('blockchain', 'تحليلات البلوك تشين');
+  }
 
 }

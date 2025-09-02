@@ -1,8 +1,8 @@
 import { BaseAnalyzer } from './BaseAnalyzer';
-import { AnalysisResult, FinancialStatement } from '../../types';
+import { AnalysisResult, FinancialStatement } from '@/lib/types';
 
 export class FinalUltimateAnalyzer extends BaseAnalyzer {
-  async analyze(statements: FinancialStatement[]): Promise<AnalysisResult[]> {
+  async analyze(statements: FinancialStatement[], companyData?: any, marketData?: any, benchmarkData?: any): Promise<AnalysisResult[]> {
     const results: AnalysisResult[] = [];
     
     results.push(await this.calculateFinalUltimateAnalysis(statements));
