@@ -1,392 +1,452 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { FinancialStatement, AnalysisResult } from '@/lib/types';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+// Initialize Gemini client
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
-// Get the Gemini Pro model for text generation
-const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+export interface GeminiResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+}
 
-// Get the Gemini Pro Vision model for image analysis
-const visionModel = genAI.getGenerativeModel({ model: 'gemini-pro-vision' });
-
+/**
+ * Analyze financial document using Gemini
+ */
 export async function analyzeFinancialDocument(
-  imageData: Buffer,
+  documentData: Buffer,
   mimeType: string
-): Promise<any> {
+): Promise<GeminiResponse> {
   try {
-    const prompt = `
-      Analyze this financial document and extract all financial data.
-      Identify:
-      1. Document type (balance sheet, income statement, cash flow, etc.)
-      2. Company name and period
-      3. All financial line items with their values
-      4. Currency used
-      5. Any notes or important annotations
-      
-      Return the data in structured JSON format.
-    `;
-
-    const imagePart = {
+    const document = {
       inlineData: {
-        data: imageData.toString('base64'),
-        mimeType
+        data: documentData.toString('base64'),
+        mimeType: mimeType
       }
     };
 
-    const result = await visionModel.generateContent([prompt, imagePart]);
+    const prompt = `Analyze this financial document and extract all relevant financial information. 
+    Please provide:
+    1. Income Statement data
+    2. Balance Sheet data
+    3. Cash Flow Statement data
+    4. Key financial ratios
+    5. Company information
+    6. Any anomalies or notable items
+    
+    Return the data in structured JSON format.`;
+
+    const result = await model.generateContent([prompt, document]);
     const response = await result.response;
     const text = response.text();
 
-    // Parse the response to extract JSON
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-
-    return { rawText: text };
+    return {
+      success: true,
+      data: {
+        document_type: mimeType,
+        analysis_result: text,
+        timestamp: new Date().toISOString(),
+        model: 'gemini-1.5-pro'
+      }
+    };
   } catch (error) {
-    console.error('Gemini vision analysis error:', error);
-    throw error;
+    console.error('Gemini document analysis error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
+/**
+ * Generate advanced analysis using Gemini
+ */
 export async function generateAdvancedAnalysis(
-  financialData: any,
-  analysisType: string,
-  additionalContext?: any
-): Promise<any> {
+  financialData: FinancialStatement[],
+  analysisType: 'scenario' | 'monte_carlo' | 'optimization' | 'predictive'
+): Promise<GeminiResponse> {
   try {
-    const prompts = {
-      scenario: `
-        Perform advanced scenario analysis on the financial data.
-        Create three scenarios: optimistic, realistic, and pessimistic.
-        For each scenario, project key financial metrics for the next 3 years.
-        Consider industry trends, economic factors, and company-specific risks.
-      `,
-      
-      monte_carlo: `
-        Conduct a Monte Carlo simulation analysis on the financial projections.
-        Identify key variables and their probability distributions.
-        Run 1000 simulations and provide:
-        - Probability distribution of outcomes
-        - Confidence intervals
-        - Risk metrics (VaR, CVaR)
-        - Key sensitivity factors
-      `,
-      
-      competitive: `
-        Perform a comprehensive competitive analysis.
-        Compare the company's financial performance with industry peers.
-        Analyze:
-        - Market positioning
-        - Competitive advantages/disadvantages
-        - Strategic opportunities
-        - Threat assessment
-      `,
-      
-      sustainability: `
-        Analyze the financial sustainability and ESG factors.
-        Evaluate:
-        - Long-term financial viability
-        - Environmental impact and risks
-        - Social responsibility metrics
-        - Governance quality indicators
-        - Sustainability-adjusted financial projections
-      `
-    };
-
-    const selectedPrompt = prompts[analysisType as keyof typeof prompts] || prompts.scenario;
+    const prompt = generateAdvancedAnalysisPrompt(financialData, analysisType);
     
-    const fullPrompt = `
-      ${selectedPrompt}
-      
-      Financial Data:
-      ${JSON.stringify(financialData, null, 2)}
-      
-      Additional Context:
-      ${JSON.stringify(additionalContext || {}, null, 2)}
-      
-      Provide a comprehensive analysis with specific numbers, calculations, and actionable insights.
-      Format the response as structured JSON.
-    `;
-
-    const result = await model.generateContent(fullPrompt);
+    const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
-    // Parse JSON from response
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-
-    return { analysis: text };
+    return {
+      success: true,
+      data: {
+        analysis_type: analysisType,
+        result: text,
+        timestamp: new Date().toISOString(),
+        model: 'gemini-1.5-pro'
+      }
+    };
   } catch (error) {
     console.error('Gemini advanced analysis error:', error);
-    throw error;
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
+/**
+ * Perform predictive analysis using Gemini
+ */
 export async function performPredictiveAnalysis(
-  historicalData: any[],
-  predictionType: string,
-  horizon: number = 12
-): Promise<any> {
+  financialData: FinancialStatement[],
+  predictionType: 'financial_forecast' | 'real_time_forecast' | 'trend_analysis',
+  forecastPeriod: number = 12
+): Promise<GeminiResponse> {
   try {
-    const prompt = `
-      Perform predictive analysis on the historical financial data.
-      
-      Prediction Type: ${predictionType}
-      Prediction Horizon: ${horizon} months
-      
-      Historical Data:
-      ${JSON.stringify(historicalData, null, 2)}
-      
-      Use appropriate statistical and machine learning techniques to:
-      1. Identify trends and patterns
-      2. Detect seasonality and cycles
-      3. Generate point forecasts
-      4. Provide confidence intervals
-      5. Identify key drivers of predictions
-      6. Assess prediction reliability
-      
-      Return structured JSON with predictions, methodology, and confidence metrics.
-    `;
+    const prompt = `Perform ${predictionType} analysis on the following financial data for the next ${forecastPeriod} months:
+
+${JSON.stringify(financialData, null, 2)}
+
+Please provide:
+1. Revenue predictions with confidence intervals
+2. Cost and expense forecasts
+3. Cash flow projections
+4. Key financial ratio predictions
+5. Risk factors and scenarios
+6. Sensitivity analysis
+7. Recommendations based on predictions
+
+Use advanced statistical methods and provide detailed explanations.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-
-    return { predictions: text };
+    return {
+      success: true,
+      data: {
+        prediction_type: predictionType,
+        forecast_period: forecastPeriod,
+        predictions: text,
+        timestamp: new Date().toISOString(),
+        model: 'gemini-1.5-pro'
+      }
+    };
   } catch (error) {
     console.error('Gemini predictive analysis error:', error);
-    throw error;
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
+/**
+ * Detect financial fraud using Gemini
+ */
 export async function detectFinancialFraud(
-  financialStatements: any[],
-  transactionData?: any[]
-): Promise<any> {
+  financialData: FinancialStatement[]
+): Promise<GeminiResponse> {
   try {
-    const prompt = `
-      Perform forensic financial analysis to detect potential fraud indicators.
-      
-      Financial Statements:
-      ${JSON.stringify(financialStatements, null, 2)}
-      
-      ${transactionData ? `Transaction Data Sample:\n${JSON.stringify(transactionData.slice(0, 100), null, 2)}` : ''}
-      
-      Analyze for:
-      1. Benford's Law violations
-      2. Unusual journal entries
-      3. Round number anomalies
-      4. Trend discontinuities
-      5. Ratio manipulation indicators
-      6. Revenue recognition issues
-      7. Expense timing manipulation
-      8. Related party transaction red flags
-      
-      Provide:
-      - Fraud risk score (0-100)
-      - Specific red flags identified
-      - Areas requiring further investigation
-      - Recommended forensic procedures
-      
-      Format as JSON with detailed findings and evidence.
-    `;
+    const prompt = `Analyze the following financial data for potential fraud indicators:
+
+${JSON.stringify(financialData, null, 2)}
+
+Please identify:
+1. Red flags and suspicious patterns
+2. Inconsistencies in financial statements
+3. Unusual transactions or trends
+4. Potential manipulation indicators
+5. Risk assessment and probability
+6. Recommended investigation steps
+7. Compliance and regulatory considerations
+
+Use advanced fraud detection methodologies and provide detailed analysis.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-
-    return { fraudAnalysis: text };
+    return {
+      success: true,
+      data: {
+        fraud_analysis: text,
+        timestamp: new Date().toISOString(),
+        model: 'gemini-1.5-pro'
+      }
+    };
   } catch (error) {
     console.error('Gemini fraud detection error:', error);
-    throw error;
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
+/**
+ * Optimize financial structure using Gemini
+ */
 export async function optimizeFinancialStructure(
-  currentFinancials: any,
-  constraints: any,
+  financialStatement: FinancialStatement,
+  constraints: { regulatory: boolean; market: boolean },
   objectives: string[]
-): Promise<any> {
+): Promise<GeminiResponse> {
   try {
-    const prompt = `
-      Optimize the company's financial structure based on current financials and constraints.
-      
-      Current Financial Position:
-      ${JSON.stringify(currentFinancials, null, 2)}
-      
-      Constraints:
-      ${JSON.stringify(constraints, null, 2)}
-      
-      Optimization Objectives:
-      ${objectives.join(', ')}
-      
-      Provide recommendations for:
-      1. Optimal capital structure (debt/equity mix)
-      2. Working capital optimization
-      3. Asset allocation improvements
-      4. Cost structure optimization
-      5. Cash flow management strategies
-      6. Investment prioritization
-      7. Risk-return trade-offs
-      
-      Include:
-      - Specific numerical recommendations
-      - Implementation roadmap
-      - Expected impact on key metrics
-      - Risk considerations
-      
-      Format as structured JSON with detailed optimization strategies.
-    `;
+    const prompt = `Optimize the financial structure for the following company:
+
+Financial Data: ${JSON.stringify(financialStatement, null, 2)}
+Constraints: ${JSON.stringify(constraints, null, 2)}
+Objectives: ${objectives.join(', ')}
+
+Please provide:
+1. Current financial structure analysis
+2. Optimization opportunities
+3. Recommended changes with impact analysis
+4. Risk assessment of proposed changes
+5. Implementation timeline and steps
+6. Expected outcomes and benefits
+7. Monitoring and control measures
+
+Use advanced optimization techniques and provide detailed recommendations.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-
-    return { optimization: text };
+    return {
+      success: true,
+      data: {
+        optimization_analysis: text,
+        constraints: constraints,
+        objectives: objectives,
+        timestamp: new Date().toISOString(),
+        model: 'gemini-1.5-pro'
+      }
+    };
   } catch (error) {
     console.error('Gemini optimization error:', error);
-    throw error;
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
+/**
+ * Generate executive presentation using Gemini
+ */
 export async function generateExecutivePresentation(
-  analysisResults: any,
+  analysisResults: AnalysisResult[],
   companyInfo: any,
-  presentationType: 'board' | 'investor' | 'bank' | 'internal'
-): Promise<any> {
+  audience: 'board' | 'investors' | 'management' | 'stakeholders'
+): Promise<GeminiResponse> {
   try {
-    const prompt = `
-      Create an executive presentation based on the financial analysis results.
-      
-      Presentation Type: ${presentationType}
-      Company Info: ${JSON.stringify(companyInfo, null, 2)}
-      
-      Analysis Results:
-      ${JSON.stringify(analysisResults, null, 2)}
-      
-      Generate a structured presentation with:
-      1. Executive summary slide
-      2. Key financial highlights
-      3. Performance trends visualization descriptions
-      4. Comparative analysis
-      5. Risk assessment summary
-      6. Strategic recommendations
-      7. Action plan
-      8. Q&A anticipated questions
-      
-      For each slide provide:
-      - Title
-      - Key bullet points
-      - Suggested visualizations
-      - Speaker notes
-      - Data to highlight
-      
-      Tailor the content and tone for the ${presentationType} audience.
-      Format as JSON with complete slide deck structure.
-    `;
+    const prompt = `Create an executive presentation for ${audience} based on the following analysis results:
+
+Analysis Results: ${JSON.stringify(analysisResults, null, 2)}
+Company Info: ${JSON.stringify(companyInfo, null, 2)}
+
+Please create:
+1. Executive summary slide
+2. Key financial highlights
+3. Performance analysis and trends
+4. Risk assessment and mitigation
+5. Strategic recommendations
+6. Future outlook and projections
+7. Action items and next steps
+
+Format as a professional presentation with clear sections and actionable insights.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-
-    return { presentation: text };
+    return {
+      success: true,
+      data: {
+        presentation_content: text,
+        audience: audience,
+        company_info: companyInfo,
+        timestamp: new Date().toISOString(),
+        model: 'gemini-1.5-pro'
+      }
+    };
   } catch (error) {
-    console.error('Gemini presentation generation error:', error);
-    throw error;
+    console.error('Gemini presentation error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
-// Batch processing for multiple analyses
+/**
+ * Batch analyze documents using Gemini
+ */
 export async function batchAnalyzeDocuments(
   documents: Array<{ data: Buffer; mimeType: string; filename: string }>
-): Promise<any[]> {
+): Promise<GeminiResponse> {
   try {
-    const results = await Promise.all(
-      documents.map(async (doc) => {
-        try {
-          const analysis = await analyzeFinancialDocument(doc.data, doc.mimeType);
-          return {
-            filename: doc.filename,
-            success: true,
-            data: analysis
-          };
-        } catch (error) {
-          return {
-            filename: doc.filename,
-            success: false,
-            error: error instanceof Error ? error.message : 'Unknown error'
-          };
+    const results = [];
+    
+    for (const doc of documents) {
+      const document = {
+        inlineData: {
+          data: doc.data.toString('base64'),
+          mimeType: doc.mimeType
         }
-      })
-    );
+      };
 
-    return results;
+      const prompt = `Analyze this financial document (${doc.filename}) and extract key financial information. 
+      Focus on:
+      1. Financial statement data
+      2. Key metrics and ratios
+      3. Notable trends or anomalies
+      4. Company information
+      
+      Provide structured summary.`;
+
+      const result = await model.generateContent([prompt, document]);
+      const response = await result.response;
+      const text = response.text();
+
+      results.push({
+        filename: doc.filename,
+        mimeType: doc.mimeType,
+        analysis: text
+      });
+    }
+
+    return {
+      success: true,
+      data: {
+        batch_results: results,
+        total_documents: documents.length,
+        timestamp: new Date().toISOString(),
+        model: 'gemini-1.5-pro'
+      }
+    };
   } catch (error) {
-    console.error('Gemini batch processing error:', error);
-    throw error;
+    console.error('Gemini batch analysis error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
 }
 
-// Real-time market sentiment analysis
+/**
+ * Analyze market sentiment using Gemini
+ */
 export async function analyzeMarketSentiment(
   companyName: string,
-  sector: string,
-  recentNews?: string[]
-): Promise<any> {
+  sector: string
+): Promise<GeminiResponse> {
   try {
-    const prompt = `
-      Analyze current market sentiment for ${companyName} in the ${sector} sector.
-      
-      ${recentNews ? `Recent News Headlines:\n${recentNews.join('\n')}` : ''}
-      
-      Provide:
-      1. Overall sentiment score (-100 to +100)
-      2. Key sentiment drivers
-      3. Sector-specific factors
-      4. Comparison with sector sentiment
-      5. Short-term outlook
-      6. Potential impact on financial performance
-      7. Risk factors from sentiment analysis
-      
-      Format as JSON with quantitative scores and qualitative insights.
-    `;
+    const prompt = `Analyze market sentiment for ${companyName} in the ${sector} sector.
+
+Please provide:
+1. Current market sentiment analysis
+2. Key factors influencing sentiment
+3. Competitor sentiment comparison
+4. Industry trends and outlook
+5. Risk factors and opportunities
+6. Recommendations for sentiment improvement
+7. Monitoring and tracking suggestions
+
+Use current market data and provide actionable insights.`;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
     const text = response.text();
 
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-
-    return { sentiment: text };
+    return {
+      success: true,
+      data: {
+        company_name: companyName,
+        sector: sector,
+        sentiment_analysis: text,
+        timestamp: new Date().toISOString(),
+        model: 'gemini-1.5-pro'
+      }
+    };
   } catch (error) {
     console.error('Gemini sentiment analysis error:', error);
-    throw error;
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Unknown error'
+    };
   }
+}
+
+/**
+ * Generate advanced analysis prompt based on type
+ */
+function generateAdvancedAnalysisPrompt(
+  financialData: FinancialStatement[],
+  analysisType: string
+): string {
+  const dataString = JSON.stringify(financialData, null, 2);
+  
+  const prompts = {
+    scenario: `Perform comprehensive scenario analysis on the following financial data:
+
+${dataString}
+
+Please provide:
+1. Base case scenario with detailed projections
+2. Optimistic scenario with growth assumptions
+3. Pessimistic scenario with risk factors
+4. Stress testing scenarios
+5. Sensitivity analysis for key variables
+6. Probability assessments for each scenario
+7. Strategic recommendations for each scenario
+
+Use advanced modeling techniques and provide detailed analysis.`,
+    
+    monte_carlo: `Perform Monte Carlo simulation analysis on the following financial data:
+
+${dataString}
+
+Please provide:
+1. Simulation setup and parameters
+2. Key variables and their distributions
+3. Simulation results with confidence intervals
+4. Risk assessment and probability analysis
+5. Value at Risk (VaR) calculations
+6. Expected outcomes and scenarios
+7. Recommendations based on simulation results
+
+Use advanced statistical methods and provide comprehensive analysis.`,
+    
+    optimization: `Perform financial structure optimization analysis on the following data:
+
+${dataString}
+
+Please provide:
+1. Current structure analysis
+2. Optimization objectives and constraints
+3. Alternative structure scenarios
+4. Impact analysis of proposed changes
+5. Risk-return trade-offs
+6. Implementation roadmap
+7. Performance monitoring framework
+
+Use advanced optimization techniques and provide detailed recommendations.`,
+    
+    predictive: `Perform advanced predictive analysis on the following financial data:
+
+${dataString}
+
+Please provide:
+1. Time series analysis and forecasting
+2. Trend identification and pattern recognition
+3. Predictive models and algorithms
+4. Confidence intervals and accuracy measures
+5. Risk factors and uncertainty analysis
+6. Scenario-based predictions
+7. Strategic implications and recommendations
+
+Use machine learning and advanced statistical methods.`
+  };
+
+  return prompts[analysisType as keyof typeof prompts] || prompts.scenario;
 }
