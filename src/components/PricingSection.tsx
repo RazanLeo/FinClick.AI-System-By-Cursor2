@@ -43,18 +43,40 @@ const PricingSection: React.FC<PricingSectionProps> = ({ language }) => {
     setSelectedPlan(planId);
 
     try {
-      // محاكاة عملية الدفع
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // الحصول على بيانات المستخدم الحالي
+      const userId = 'current-user-id'; // يجب الحصول على ID المستخدم الحالي
       
-      // هنا يمكن إضافة تكامل مع Stripe أو PayPal
-      const success = await processPayment(planId, paymentMethod);
-      
-      if (success) {
-        alert(language === 'ar' ? 'تم الاشتراك بنجاح!' : 'Subscription successful!');
-        // إعادة توجيه إلى لوحة التحكم
-        window.location.href = '/dashboard';
+      // تحديد نوع الخطة والسعر
+      const plan = plans.find(p => p.id === planId);
+      if (!plan) {
+        throw new Error('Plan not found');
+      }
+
+      const amount = billingCycle === 'monthly' ? plan.price.monthly : plan.price.annual;
+      const planType = billingCycle === 'monthly' ? 'monthly' : 'yearly';
+
+      // إنشاء طلب الدفع
+      const response = await fetch('/api/payment/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId,
+          planId,
+          planType,
+          amount,
+          paymentMethod: paymentMethod === 'card' ? 'mada' : paymentMethod
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.paymentUrl) {
+        // إعادة توجيه إلى صفحة الدفع
+        window.location.href = result.paymentUrl;
       } else {
-        alert(language === 'ar' ? 'فشل في المعالجة' : 'Payment failed');
+        throw new Error(result.error || 'Payment creation failed');
       }
     } catch (error) {
       console.error('خطأ في المعالجة:', error);
@@ -369,9 +391,17 @@ const PricingSection: React.FC<PricingSectionProps> = ({ language }) => {
                   className={`w-full btn ${plan.buttonVariant} flex items-center justify-center gap-2`}
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  onClick={() => setSelectedPlan(plan.id)}
+                  onClick={() => handleSubscription(plan.id)}
+                  disabled={isProcessing && selectedPlan === plan.id}
                 >
-                  {plan.buttonText}
+                  {isProcessing && selectedPlan === plan.id ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      {language === 'ar' ? 'جاري المعالجة...' : 'Processing...'}
+                    </>
+                  ) : (
+                    plan.buttonText
+                  )}
                 </motion.button>
               </div>
             </motion.div>
